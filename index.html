@@ -1,0 +1,1982 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Neuro Nest — Mind Operating System</title>
+<style>
+:root{
+  --bg:#0a0a12; --bg2:#0d0d17;
+  --card:#12121e; --card2:#171726;
+  --border:rgba(255,255,255,.075); --border2:rgba(255,255,255,.14);
+  --text:#edeaf8; --muted:#9a97b8; --faint:#6d6a8a;
+  --accent:#8b5cf6; --accent2:#6366f1; --accent-soft:rgba(139,92,246,.16);
+  --good:#34d399; --warn:#fbbf24; --bad:#f87171; --info:#38bdf8;
+  --radius:20px; --radius-sm:13px;
+  --grad:linear-gradient(135deg,#8b5cf6,#6366f1);
+  --shadow:0 10px 34px rgba(0,0,0,.45);
+}
+html{ -webkit-text-size-adjust:100%; }
+html.font-lg{ font-size:18px; }
+*{ box-sizing:border-box; margin:0; padding:0; }
+html,body{ height:100%; }
+body{
+  font-family:'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans', sans-serif;
+  font-size:15px; line-height:1.55; color:var(--text);
+  background:
+    radial-gradient(1100px 700px at 85% -10%, rgba(139,92,246,.13), transparent 60%),
+    radial-gradient(900px 600px at -10% 110%, rgba(99,102,241,.10), transparent 60%),
+    var(--bg);
+  min-height:100vh;
+}
+::-webkit-scrollbar{ width:9px; height:9px; }
+::-webkit-scrollbar-thumb{ background:rgba(255,255,255,.13); border-radius:99px; }
+::-webkit-scrollbar-track{ background:transparent; }
+a{ color:var(--accent); text-decoration:none; }
+button{ font:inherit; color:inherit; background:none; border:none; cursor:pointer; }
+input,select,textarea{ font:inherit; color:var(--text); }
+img,svg{ display:block; }
+.sr-only{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; border-radius:6px; }
+
+/* ---------- App shell ---------- */
+.app{ display:flex; min-height:100vh; }
+.sidebar{
+  width:258px; flex:0 0 258px; position:sticky; top:0; height:100vh; overflow-y:auto;
+  background:rgba(13,13,23,.86); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+  border-right:1px solid var(--border); display:flex; flex-direction:column; padding:20px 14px; z-index:60;
+}
+.brand{ display:flex; align-items:center; gap:11px; padding:4px 8px 18px; }
+.brand-mark{ width:40px; height:40px; border-radius:12px; background:var(--grad); display:grid; place-items:center; box-shadow:0 6px 20px rgba(139,92,246,.4); flex:0 0 40px; }
+.brand-name{ font-weight:800; letter-spacing:.14em; font-size:.95rem; }
+.brand-sub{ font-size:.58rem; letter-spacing:.24em; color:var(--muted); font-weight:600; margin-top:1px; }
+nav.side-nav{ display:flex; flex-direction:column; gap:3px; flex:1; }
+.nav-item{
+  display:flex; align-items:center; gap:11px; padding:10px 12px; border-radius:12px;
+  color:var(--muted); font-weight:550; font-size:.92rem; text-align:left; width:100%;
+  transition:background .18s, color .18s; position:relative;
+}
+.nav-item svg{ width:19px; height:19px; flex:0 0 19px; opacity:.85; }
+.nav-item:hover{ background:rgba(255,255,255,.05); color:var(--text); }
+.nav-item.active{ background:var(--accent-soft); color:#c4b0ff; }
+.nav-item.active::before{ content:""; position:absolute; left:-14px; top:20%; bottom:20%; width:3px; border-radius:99px; background:var(--grad); }
+.nav-badge{ font-size:.56rem; font-weight:800; letter-spacing:.08em; background:var(--grad); color:#fff; padding:2px 7px; border-radius:99px; margin-left:auto; }
+.side-foot{ margin-top:14px; display:flex; flex-direction:column; gap:10px; }
+.upgrade-btn{
+  display:flex; align-items:center; justify-content:center; gap:8px; padding:11px 12px; border-radius:13px;
+  background:var(--grad); color:#fff; font-weight:650; font-size:.88rem; width:100%;
+  box-shadow:0 8px 22px rgba(139,92,246,.35); transition:transform .18s, box-shadow .18s;
+}
+.upgrade-btn:hover{ transform:translateY(-1px); box-shadow:0 10px 26px rgba(139,92,246,.5); }
+.user-chip{ display:flex; align-items:center; gap:10px; padding:10px; border-radius:14px; background:var(--card); border:1px solid var(--border); width:100%; text-align:left; }
+.user-chip .u-name{ font-weight:650; font-size:.85rem; }
+.user-chip .u-plan{ font-size:.66rem; color:var(--muted); font-weight:700; letter-spacing:.08em; }
+.avatar{
+  width:36px; height:36px; border-radius:11px; background:var(--grad); color:#fff; font-weight:750; font-size:.8rem;
+  display:grid; place-items:center; flex:0 0 36px; border:none;
+}
+.backdrop{ display:none; }
+
+.main{ flex:1; min-width:0; display:flex; flex-direction:column; }
+.topbar{
+  position:sticky; top:0; z-index:50; display:flex; align-items:center; gap:14px;
+  padding:13px 26px; background:rgba(10,10,18,.78); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--border);
+}
+.hamburger{ display:none; width:38px; height:38px; border-radius:10px; border:1px solid var(--border); background:var(--card); align-items:center; justify-content:center; }
+.hamburger svg{ width:18px; height:18px; }
+.tb-titles{ min-width:0; }
+.tb-titles h1{ font-size:1.05rem; font-weight:750; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.tb-titles p{ font-size:.74rem; color:var(--muted); display:flex; align-items:center; gap:6px; }
+.tb-right{ margin-left:auto; display:flex; align-items:center; gap:8px; }
+.pill{
+  display:flex; align-items:center; gap:6px; padding:7px 12px; border-radius:99px; font-size:.78rem; font-weight:650;
+  background:var(--card); border:1px solid var(--border); color:var(--text); white-space:nowrap;
+}
+.pill .ico{ width:15px; height:15px; }
+.pill-focus{ border-color:rgba(139,92,246,.5); background:var(--accent-soft); cursor:pointer; }
+.pill .live-dot{ width:7px; height:7px; border-radius:99px; background:var(--good); animation:pulse 1.6s infinite; }
+@keyframes pulse{ 0%,100%{ opacity:1; transform:scale(1);} 50%{ opacity:.4; transform:scale(.8);} }
+.tb-avatar{ width:38px; height:38px; border-radius:11px; padding:0; }
+
+.content{ flex:1; width:100%; max-width:1180px; margin:0 auto; padding:26px 26px 60px; }
+.page{ display:none; }
+.page.active{ display:block; animation:fadeUp .38s ease both; }
+@keyframes fadeUp{ from{ opacity:0; transform:translateY(10px);} to{ opacity:1; transform:none;} }
+@keyframes popIn{ from{ opacity:0; transform:scale(.94);} to{ opacity:1; transform:scale(1);} }
+
+/* ---------- Layout helpers ---------- */
+.grid{ display:grid; gap:16px; }
+.g2{ grid-template-columns:repeat(2,1fr); }
+.g3{ grid-template-columns:repeat(3,1fr); }
+.g4{ grid-template-columns:repeat(4,1fr); }
+.g23{ grid-template-columns:2fr 1fr; }
+.g32{ grid-template-columns:1fr 2fr; }
+.row{ display:flex; align-items:center; gap:10px; }
+.row.wrap{ flex-wrap:wrap; }
+.spread{ display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.mt{ margin-top:16px; } .mt2{ margin-top:24px; }
+.muted{ color:var(--muted); } .small{ font-size:.8rem; } .tiny{ font-size:.7rem; }
+.center{ text-align:center; }
+.stack{ display:flex; flex-direction:column; gap:8px; }
+
+/* ---------- Cards ---------- */
+.card{
+  background:linear-gradient(180deg, rgba(255,255,255,.024), rgba(255,255,255,0) 40%), var(--card);
+  border:1px solid var(--border); border-radius:var(--radius); padding:20px; position:relative;
+}
+.card-title{ display:flex; align-items:center; gap:9px; font-weight:700; font-size:.95rem; margin-bottom:4px; }
+.card-title svg{ width:17px; height:17px; color:var(--accent); }
+.card-sub{ color:var(--muted); font-size:.8rem; margin-bottom:14px; }
+.hero{
+  border-radius:24px; padding:30px; border:1px solid rgba(139,92,246,.35); position:relative; overflow:hidden;
+  background:
+    radial-gradient(500px 260px at 90% -30%, rgba(139,92,246,.28), transparent 60%),
+    radial-gradient(400px 240px at -10% 130%, rgba(99,102,241,.18), transparent 60%),
+    var(--card);
+}
+.hero h2{ font-size:1.65rem; font-weight:800; letter-spacing:-.01em; }
+.hero .hero-sub{ color:#c6c2e4; margin:8px 0 20px; max-width:640px; font-size:.95rem; }
+.hero-actions{ display:flex; gap:10px; flex-wrap:wrap; }
+.hero-deco{ position:absolute; right:26px; top:50%; transform:translateY(-50%); opacity:.9; }
+
+/* ---------- Buttons ---------- */
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:11px 18px; border-radius:13px;
+  font-weight:650; font-size:.88rem; transition:transform .16s, box-shadow .16s, background .16s, border-color .16s;
+  border:1px solid transparent;
+}
+.btn svg{ width:16px; height:16px; }
+.btn:active{ transform:scale(.97); }
+.btn-primary{ background:var(--grad); color:#fff; box-shadow:0 8px 22px rgba(139,92,246,.35); }
+.btn-primary:hover{ box-shadow:0 10px 28px rgba(139,92,246,.5); transform:translateY(-1px); }
+.btn-ghost{ background:rgba(255,255,255,.05); border-color:var(--border2); color:var(--text); }
+.btn-ghost:hover{ background:rgba(255,255,255,.09); }
+.btn-soft{ background:var(--accent-soft); color:#c4b0ff; border-color:rgba(139,92,246,.3); }
+.btn-soft:hover{ background:rgba(139,92,246,.25); }
+.btn-danger{ background:rgba(248,113,113,.12); color:var(--bad); border-color:rgba(248,113,113,.3); }
+.btn-sm{ padding:7px 13px; font-size:.8rem; border-radius:10px; }
+.btn-block{ width:100%; }
+.btn[disabled]{ opacity:.45; cursor:not-allowed; transform:none!important; }
+
+/* ---------- Stats ---------- */
+.stat-card{ text-align:center; padding:20px 14px; }
+.stat-num{ font-size:1.9rem; font-weight:800; letter-spacing:-.02em; }
+.stat-label{ color:var(--muted); font-size:.78rem; font-weight:600; margin-top:2px; }
+.stat-ico{ font-size:1.3rem; margin-bottom:6px; }
+.gauge{ position:relative; display:grid; place-items:center; }
+.gauge svg{ transform:rotate(-90deg); }
+.gauge .g-label{ position:absolute; text-align:center; }
+.delta-up{ color:var(--good); font-weight:700; }
+.delta-down{ color:var(--bad); font-weight:700; }
+
+/* ---------- Chips / badges ---------- */
+.chip{
+  display:inline-flex; align-items:center; gap:7px; padding:7px 13px; border-radius:99px; font-size:.78rem; font-weight:600;
+  background:rgba(255,255,255,.05); border:1px solid var(--border); color:var(--muted);
+  transition:all .16s; cursor:pointer;
+}
+.chip:hover{ border-color:var(--border2); color:var(--text); }
+.chip.on{ background:var(--accent-soft); border-color:rgba(139,92,246,.45); color:#c9b6ff; }
+.badge{ font-size:.62rem; font-weight:800; letter-spacing:.08em; padding:3px 9px; border-radius:99px; }
+.badge-green{ background:rgba(52,211,153,.14); color:var(--good); }
+.badge-amber{ background:rgba(251,191,36,.14); color:var(--warn); }
+.badge-red{ background:rgba(248,113,113,.14); color:var(--bad); }
+.badge-purple{ background:var(--accent-soft); color:#c4b0ff; }
+.badge-grad{ background:var(--grad); color:#fff; }
+.dot{ width:8px; height:8px; border-radius:99px; display:inline-block; }
+.dot-green{ background:var(--good); box-shadow:0 0 0 0 rgba(52,211,153,.5); animation:dotPulse 2s infinite; }
+.dot-amber{ background:var(--warn); }
+@keyframes dotPulse{ 0%{ box-shadow:0 0 0 0 rgba(52,211,153,.45);} 70%{ box-shadow:0 0 0 7px rgba(52,211,153,0);} 100%{ box-shadow:0 0 0 0 rgba(52,211,153,0);} }
+
+/* ---------- Chat ---------- */
+.chat-wrap{ display:flex; flex-direction:column; height:calc(100vh - 175px); min-height:440px; }
+.chat-scroll{ flex:1; overflow-y:auto; padding:6px 4px 16px; display:flex; flex-direction:column; gap:14px; }
+.msg{ display:flex; gap:11px; max-width:82%; animation:fadeUp .3s ease both; }
+.msg.user{ margin-left:auto; flex-direction:row-reverse; }
+.msg .m-ava{ width:34px; height:34px; border-radius:11px; flex:0 0 34px; display:grid; place-items:center; background:var(--grad); color:#fff; }
+.msg.user .m-ava{ background:rgba(255,255,255,.09); border:1px solid var(--border2); color:#c4b0ff; }
+.m-bubble{ background:var(--card2); border:1px solid var(--border); border-radius:16px; padding:12px 15px; font-size:.9rem; }
+.msg.user .m-bubble{ background:linear-gradient(135deg, rgba(139,92,246,.32), rgba(99,102,241,.25)); border-color:rgba(139,92,246,.4); }
+.m-time{ font-size:.64rem; color:var(--faint); margin-top:5px; }
+.m-sug{ display:flex; flex-wrap:wrap; gap:7px; margin-top:10px; }
+.m-sug .chip{ font-size:.73rem; padding:6px 11px; }
+.crisis-box{ border:1px solid rgba(248,113,113,.4); background:rgba(248,113,113,.07); border-radius:13px; padding:12px 14px; margin-top:10px; font-size:.84rem; }
+.crisis-box b{ color:#fda4a4; }
+.typing{ display:inline-flex; gap:4px; padding:14px 16px; }
+.typing i{ width:7px; height:7px; border-radius:99px; background:var(--muted); animation:tb 1.2s infinite; }
+.typing i:nth-child(2){ animation-delay:.18s; } .typing i:nth-child(3){ animation-delay:.36s; }
+@keyframes tb{ 0%,60%,100%{ transform:translateY(0); opacity:.4;} 30%{ transform:translateY(-5px); opacity:1;} }
+.chat-inputbar{ display:flex; gap:10px; align-items:center; padding-top:12px; border-top:1px solid var(--border); margin-top:6px; }
+.chat-input{
+  flex:1; background:var(--card2); border:1px solid var(--border2); border-radius:14px; padding:12px 15px;
+  font-size:.9rem; outline:none; transition:border-color .16s;
+}
+.chat-input:focus{ border-color:rgba(139,92,246,.6); }
+.send-btn{ width:44px; height:44px; border-radius:13px; background:var(--grad); color:#fff; display:grid; place-items:center; box-shadow:0 8px 20px rgba(139,92,246,.35); flex:0 0 44px; }
+.send-btn svg{ width:18px; height:18px; }
+.usage-chip{ font-size:.68rem; color:var(--muted); font-weight:600; }
+
+/* ---------- Focus ---------- */
+.seg{ display:inline-flex; background:var(--card2); border:1px solid var(--border); border-radius:13px; padding:4px; gap:4px; }
+.seg button{ padding:8px 16px; border-radius:10px; font-size:.82rem; font-weight:650; color:var(--muted); transition:all .16s; }
+.seg button.on{ background:var(--grad); color:#fff; box-shadow:0 4px 14px rgba(139,92,246,.4); }
+.timer-box{ display:flex; flex-direction:column; align-items:center; gap:18px; padding:12px 0 4px; }
+.timer-ring{ position:relative; width:264px; height:264px; }
+.timer-ring svg{ transform:rotate(-90deg); }
+.timer-text{ position:absolute; inset:0; display:grid; place-items:center; text-align:center; }
+.timer-text .t-time{ font-size:3rem; font-weight:800; letter-spacing:-.02em; font-variant-numeric:tabular-nums; }
+.timer-text .t-state{ color:var(--muted); font-size:.75rem; font-weight:700; letter-spacing:.18em; text-transform:uppercase; }
+.sound-grid{ display:flex; flex-wrap:wrap; gap:9px; justify-content:center; }
+.sound-chip{
+  display:flex; align-items:center; gap:8px; padding:9px 15px; border-radius:12px; border:1px solid var(--border);
+  background:var(--card2); font-size:.82rem; font-weight:600; color:var(--muted); transition:all .16s;
+}
+.sound-chip:hover{ color:var(--text); border-color:var(--border2); }
+.sound-chip.on{ background:var(--accent-soft); border-color:rgba(139,92,246,.5); color:#c9b6ff; }
+.sound-chip svg{ width:15px; height:15px; }
+input[type=range]{ -webkit-appearance:none; appearance:none; height:5px; border-radius:99px; background:rgba(255,255,255,.14); outline:none; }
+input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none; width:16px; height:16px; border-radius:99px; background:var(--accent); border:2.5px solid #fff2; cursor:pointer; box-shadow:0 2px 10px rgba(139,92,246,.5); }
+
+/* ---------- Games ---------- */
+.game-card{ display:flex; flex-direction:column; gap:10px; }
+.game-card .g-ico{ width:46px; height:46px; border-radius:14px; display:grid; place-items:center; background:var(--accent-soft); color:#c4b0ff; }
+.game-card .g-ico svg{ width:23px; height:23px; }
+.game-lvl{ display:inline-flex; }
+.locked-ribbon{ display:inline-flex; align-items:center; gap:5px; color:var(--faint); font-size:.74rem; font-weight:700; }
+.mm-grid{ display:grid; gap:9px; margin:0 auto; width:min(100%,380px); }
+.mm-tile{
+  aspect-ratio:1; border-radius:13px; background:var(--card2); border:1px solid var(--border);
+  transition:background .15s, transform .15s, border-color .15s;
+}
+.mm-tile:hover{ border-color:var(--border2); }
+.mm-tile.lit{ background:var(--grad); border-color:transparent; box-shadow:0 0 18px rgba(139,92,246,.5); }
+.mm-tile.ok{ background:rgba(52,211,153,.75); border-color:transparent; }
+.mm-tile.bad{ background:rgba(248,113,113,.75); border-color:transparent; animation:shake .3s; }
+@keyframes shake{ 0%,100%{ transform:translateX(0);} 25%{ transform:translateX(-5px);} 75%{ transform:translateX(5px);} }
+.ft-arena{ position:relative; height:330px; border-radius:16px; background:var(--bg2); border:1px solid var(--border); overflow:hidden; cursor:crosshair; }
+.ft-target{
+  position:absolute; width:46px; height:46px; border-radius:99px; background:var(--grad); cursor:pointer;
+  box-shadow:0 0 24px rgba(139,92,246,.65); transition:left .5s ease, top .5s ease; display:grid; place-items:center; color:#fff;
+}
+.lc-seq{ font-size:1.5rem; font-weight:800; letter-spacing:.14em; text-align:center; padding:18px; border-radius:14px; background:var(--bg2); border:1px solid var(--border); font-variant-numeric:tabular-nums; }
+.lc-opts{ display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
+.lc-opt{ padding:15px; border-radius:13px; background:var(--card2); border:1px solid var(--border); font-size:1.15rem; font-weight:750; transition:all .15s; }
+.lc-opt:hover{ border-color:var(--border2); }
+.lc-opt.right{ background:rgba(52,211,153,.22); border-color:rgba(52,211,153,.55); }
+.lc-opt.wrong{ background:rgba(248,113,113,.22); border-color:rgba(248,113,113,.55); }
+.sp-grid{ display:grid; gap:8px; margin:0 auto; width:min(100%,360px); }
+.sp-cell{ aspect-ratio:1; border-radius:11px; cursor:pointer; }
+
+/* ---------- Therapy ---------- */
+.doc-card{ display:flex; flex-direction:column; gap:13px; }
+.doc-head{ display:flex; gap:13px; align-items:center; }
+.doc-ava{ width:50px; height:50px; border-radius:15px; display:grid; place-items:center; font-weight:800; font-size:.95rem; color:#fff; flex:0 0 50px; }
+.doc-name{ font-weight:750; font-size:1rem; }
+.doc-cred{ font-size:.72rem; color:var(--muted); }
+.doc-meta{ display:flex; flex-wrap:wrap; gap:7px; }
+.star{ color:var(--warn); }
+.fee{ font-weight:800; font-size:1.05rem; }
+.fee .fee-old{ color:var(--faint); text-decoration:line-through; font-weight:500; font-size:.8rem; margin-right:6px; }
+.slot-chips{ display:flex; flex-wrap:wrap; gap:8px; }
+textarea, .txt{
+  width:100%; background:var(--card2); border:1px solid var(--border2); border-radius:13px; padding:11px 13px;
+  font-size:.88rem; outline:none; resize:vertical; transition:border-color .16s;
+}
+textarea:focus, .txt:focus{ border-color:rgba(139,92,246,.6); }
+label.fld{ display:block; font-size:.72rem; font-weight:700; color:var(--muted); letter-spacing:.05em; text-transform:uppercase; margin:0 0 6px; }
+
+/* ---------- Analytics ---------- */
+.chart-wrap{ width:100%; overflow:hidden; }
+.chart-wrap svg{ width:100%; height:auto; }
+.heat-grid{ display:grid; grid-template-columns:44px repeat(6,1fr); gap:5px; align-items:center; }
+.heat-cell{ aspect-ratio:1.6; border-radius:7px; background:rgba(255,255,255,.05); }
+.heat-day{ font-size:.68rem; color:var(--muted); font-weight:700; text-align:right; padding-right:4px; }
+.heat-col{ font-size:.6rem; color:var(--faint); text-align:center; }
+.legend{ display:flex; align-items:center; gap:5px; font-size:.68rem; color:var(--muted); }
+.legend i{ width:14px; height:10px; border-radius:3px; display:inline-block; }
+.insight{ display:flex; gap:11px; padding:13px 15px; border-radius:14px; background:var(--bg2); border:1px solid var(--border); font-size:.86rem; }
+.insight .i-ico{ flex:0 0 34px; width:34px; height:34px; border-radius:10px; display:grid; place-items:center; background:var(--accent-soft); font-size:1rem; }
+.emobar{ display:flex; align-items:center; gap:10px; font-size:.8rem; }
+.emobar .eb-track{ flex:1; height:9px; border-radius:99px; background:rgba(255,255,255,.07); overflow:hidden; }
+.emobar .eb-fill{ height:100%; border-radius:99px; }
+
+/* ---------- Preventive ---------- */
+.gauge-card{ display:flex; flex-direction:column; align-items:center; gap:8px; text-align:center; padding:20px 12px; }
+.gauge-card .g-title{ font-size:.8rem; font-weight:700; color:var(--muted); }
+.gauge-card .g-status{ font-size:.72rem; font-weight:800; letter-spacing:.06em; }
+.alert-item{ display:flex; gap:13px; padding:15px; border-radius:15px; background:var(--bg2); border:1px solid var(--border); }
+.alert-item .a-dot{ width:10px; height:10px; border-radius:99px; margin-top:5px; flex:0 0 10px; }
+
+/* ---------- Toggles ---------- */
+.toggle-row{ display:flex; align-items:center; gap:14px; padding:16px; border-radius:15px; background:var(--bg2); border:1px solid var(--border); }
+.toggle-row .t-ico{ width:40px; height:40px; border-radius:12px; background:var(--accent-soft); display:grid; place-items:center; font-size:1.1rem; flex:0 0 40px; }
+.t-title{ font-weight:700; font-size:.92rem; }
+.t-desc{ color:var(--muted); font-size:.78rem; }
+.switch{ margin-left:auto; position:relative; width:46px; height:26px; flex:0 0 46px; }
+.switch input{ position:absolute; opacity:0; width:100%; height:100%; cursor:pointer; margin:0; z-index:2; }
+.switch .sl{ position:absolute; inset:0; border-radius:99px; background:rgba(255,255,255,.12); transition:background .2s; }
+.switch .sl::after{ content:""; position:absolute; top:3px; left:3px; width:20px; height:20px; border-radius:99px; background:#fff; transition:transform .2s; }
+.switch input:checked + .sl{ background:var(--grad); }
+.switch input:checked + .sl::after{ transform:translateX(20px); }
+
+/* ---------- Settings / forms ---------- */
+.form-grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.field{ margin-bottom:2px; }
+.select-wrap{ position:relative; }
+select.txt{ -webkit-appearance:none; appearance:none; padding-right:34px; }
+.select-wrap::after{ content:"▾"; position:absolute; right:14px; top:50%; transform:translateY(-50%); color:var(--muted); pointer-events:none; }
+.persona-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+.persona{
+  border:1px solid var(--border); border-radius:15px; padding:15px 10px; text-align:center; cursor:pointer; transition:all .16s; background:var(--bg2);
+}
+.persona:hover{ border-color:var(--border2); }
+.persona.on{ border-color:rgba(139,92,246,.6); background:var(--accent-soft); }
+.persona .p-emoji{ font-size:1.5rem; }
+.persona .p-name{ font-weight:700; font-size:.83rem; margin-top:6px; }
+.persona .p-desc{ font-size:.68rem; color:var(--muted); margin-top:2px; }
+
+/* ---------- Pricing ---------- */
+.plan-card{ border:1px solid var(--border); border-radius:22px; padding:24px; background:var(--card); display:flex; flex-direction:column; gap:14px; position:relative; }
+.plan-card.pro{ border-color:rgba(139,92,246,.55); background:
+  radial-gradient(400px 200px at 50% -20%, rgba(139,92,246,.2), transparent 70%), var(--card); }
+.plan-card .p-name{ font-size:1.05rem; font-weight:800; }
+.plan-price{ display:flex; align-items:baseline; gap:6px; }
+.plan-price .amt{ font-size:2.1rem; font-weight:800; letter-spacing:-.02em; }
+.plan-price .per{ color:var(--muted); font-size:.82rem; }
+.feat{ display:flex; gap:9px; font-size:.85rem; align-items:flex-start; }
+.feat svg{ width:15px; height:15px; color:var(--good); flex:0 0 15px; margin-top:2px; }
+.feat.no{ color:var(--faint); }
+.feat.no svg{ color:var(--faint); }
+.rec-badge{ position:absolute; top:-11px; left:50%; transform:translateX(-50%); }
+
+/* ---------- Modal ---------- */
+.overlay{
+  position:fixed; inset:0; background:rgba(5,5,12,.72); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+  z-index:200; display:grid; place-items:center; padding:18px; animation:fadeUp .2s ease both; overflow-y:auto;
+}
+.modal{
+  width:100%; max-width:540px; background:var(--card); border:1px solid var(--border2); border-radius:24px;
+  padding:26px; box-shadow:var(--shadow); animation:popIn .28s cubic-bezier(.2,.9,.3,1.2) both; max-height:92vh; overflow-y:auto; margin:auto;
+}
+.modal.wide{ max-width:660px; }
+.modal h3{ font-size:1.2rem; font-weight:800; }
+.modal .m-sub{ color:var(--muted); font-size:.84rem; margin:4px 0 16px; }
+.m-close{ position:absolute; top:16px; right:16px; width:34px; height:34px; border-radius:10px; background:rgba(255,255,255,.06); display:grid; place-items:center; color:var(--muted); }
+.m-close:hover{ background:rgba(255,255,255,.12); color:var(--text); }
+.m-close svg{ width:15px; height:15px; }
+.modal .m-head{ position:relative; margin-bottom:10px; padding-right:40px; }
+.emoji-row{ display:flex; justify-content:space-between; gap:6px; }
+.emoji-btn{ font-size:1.9rem; padding:8px 6px; border-radius:14px; border:2px solid transparent; transition:all .15s; background:rgba(255,255,255,.03); flex:1; }
+.emoji-btn:hover{ transform:translateY(-2px); }
+.emoji-btn.on{ border-color:var(--accent); background:var(--accent-soft); transform:translateY(-2px); }
+
+/* ---------- Toast / confetti / breathe ---------- */
+#toastRoot{ position:fixed; top:18px; right:18px; z-index:400; display:flex; flex-direction:column; gap:9px; max-width:min(360px, calc(100vw - 36px)); }
+.toast{
+  display:flex; gap:10px; align-items:flex-start; padding:13px 16px; border-radius:15px; background:#1b1b2c;
+  border:1px solid var(--border2); box-shadow:var(--shadow); font-size:.85rem; font-weight:550; animation:popIn .25s ease both;
+}
+.toast .t-emoji{ font-size:1.05rem; }
+.toast.success{ border-color:rgba(52,211,153,.45); } .toast.warn{ border-color:rgba(251,191,36,.45); } .toast.info{ border-color:rgba(139,92,246,.5); }
+#confettiCanvas{ position:fixed; inset:0; pointer-events:none; z-index:500; }
+.breathe-overlay{ position:fixed; inset:0; z-index:300; background:rgba(7,7,14,.94); backdrop-filter:blur(8px); display:grid; place-items:center; animation:fadeUp .25s ease both; }
+.breathe-box{ text-align:center; }
+.b-circle{
+  width:230px; height:230px; border-radius:50%; margin:0 auto 26px;
+  background:radial-gradient(circle at 50% 40%, rgba(139,92,246,.4), rgba(99,102,241,.12) 65%, transparent 72%);
+  border:2px solid rgba(139,92,246,.5); display:grid; place-items:center; transform:scale(.72);
+}
+.b-phase{ font-size:1.35rem; font-weight:800; letter-spacing:.04em; }
+.b-count{ font-size:3rem; font-weight:800; font-variant-numeric:tabular-nums; color:#c4b0ff; }
+.b-cycles{ color:var(--muted); font-size:.8rem; margin-top:8px; }
+
+/* ---------- Accessibility variants ---------- */
+body.reduce-motion *, body.reduce-motion *::before, body.reduce-motion *::after{ animation:none!important; transition:none!important; }
+body.hc{ --text:#ffffff; --muted:#d6d4ea; --faint:#b4b2cc; --border:rgba(255,255,255,.4); --border2:rgba(255,255,255,.55); --card:#050508; --card2:#0b0b12; --bg:#000; }
+body.hc .card, body.hc .hero{ background:#05050a; }
+body.cb{ --accent:#4f8cff; --accent2:#f59e0b; --accent-soft:rgba(79,140,255,.16); --good:#4f8cff; --bad:#f59e0b; --warn:#f59e0b;
+  --grad:linear-gradient(135deg,#4f8cff,#2f6fe0); }
+body.sr focus-visible{ outline:3px solid var(--warn); }
+
+/* ---------- Responsive ---------- */
+@media (max-width:1020px){
+  .g4{ grid-template-columns:repeat(2,1fr); }
+  .g3{ grid-template-columns:repeat(2,1fr); }
+  .g23, .g32{ grid-template-columns:1fr; }
+  .persona-grid{ grid-template-columns:repeat(2,1fr); }
+}
+@media (max-width:900px){
+  .sidebar{ position:fixed; left:0; top:0; bottom:0; transform:translateX(-104%); transition:transform .28s ease; box-shadow:var(--shadow); }
+  .sidebar.open{ transform:translateX(0); }
+  .backdrop{ display:block; position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:55; opacity:0; pointer-events:none; transition:opacity .25s; }
+  .backdrop.show{ opacity:1; pointer-events:auto; }
+  .hamburger{ display:flex; }
+  .content{ padding:18px 14px 80px; }
+  .chat-wrap{ height:calc(100vh - 210px); }
+  .hero-deco{ display:none; }
+}
+@media (max-width:640px){
+  .g2, .g3, .g4{ grid-template-columns:1fr; }
+  .form-grid{ grid-template-columns:1fr; }
+  .tb-titles p{ display:none; }
+  .msg{ max-width:94%; }
+  .pill-xp, .pill-streak{ display:none; }
+  .modal{ padding:20px 16px; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="backdrop" id="backdrop" data-action="toggleSidebar"></div>
+  <aside class="sidebar" id="sidebar" aria-label="Main navigation">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3.2" fill="#fff"/><circle cx="12" cy="12" r="7.4" stroke="#fff" stroke-opacity=".75" stroke-width="1.5"/><circle cx="12" cy="12" r="10.6" stroke="#fff" stroke-opacity=".35" stroke-width="1.2" stroke-dasharray="2.4 3"/><circle cx="12" cy="4.6" r="1.7" fill="#fff"/><circle cx="18.3" cy="15.5" r="1.7" fill="#fff" stroke-opacity=".6"/></svg>
+      </div>
+      <div>
+        <div class="brand-name">NEURO NEST</div>
+        <div class="brand-sub">MIND OPERATING SYSTEM</div>
+      </div>
+    </div>
+    <nav class="side-nav" id="sideNav"></nav>
+    <div class="side-foot">
+      <button class="upgrade-btn" id="upgradeBtn" data-action="openPricing">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 6.4L21 9.3l-5 4.4 1.5 6.8L12 17l-5.5 3.5L8 13.7 3 9.3l6.6-.9z"/></svg>
+        Upgrade to Pro
+      </button>
+      <button class="user-chip" data-action="go" data-page="settings">
+        <span class="avatar" id="sideAvatar">AK</span>
+        <span style="min-width:0">
+          <span class="u-name" id="sideName" style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Alex Kumar</span>
+          <span class="u-plan" id="sidePlan">FREE PLAN</span>
+        </span>
+      </button>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <button class="hamburger" data-action="toggleSidebar" aria-label="Open menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+      <div class="tb-titles">
+        <h1 id="tbTitle">Dashboard</h1>
+        <p id="tbSub">Your mind, at a glance</p>
+      </div>
+      <div class="tb-right">
+        <button class="pill pill-focus" id="miniTimer" data-action="go" data-page="focus" hidden></button>
+        <div class="pill pill-streak" id="pillStreak" title="Day streak"></div>
+        <div class="pill pill-xp" id="pillXP" title="XP points"></div>
+        <button class="avatar tb-avatar" id="tbAvatar" data-action="go" data-page="settings" aria-label="Open settings">AK</button>
+      </div>
+    </header>
+    <main class="content" id="content">
+      <section class="page" id="page-dashboard" aria-label="Dashboard"></section>
+      <section class="page" id="page-chat" aria-label="AI Companion"></section>
+      <section class="page" id="page-focus" aria-label="Focus Mode"></section>
+      <section class="page" id="page-cognitive" aria-label="Cognitive Lab"></section>
+      <section class="page" id="page-therapy" aria-label="Therapy Hub"></section>
+      <section class="page" id="page-analytics" aria-label="Analytics"></section>
+      <section class="page" id="page-preventive" aria-label="Preventive AI"></section>
+      <section class="page" id="page-neurodiverse" aria-label="Neurodiverse Mode"></section>
+      <section class="page" id="page-settings" aria-label="Settings"></section>
+    </main>
+  </div>
+</div>
+<div id="modalRoot"></div>
+<div id="toastRoot" aria-live="polite"></div>
+<div id="breatheRoot"></div>
+<canvas id="confettiCanvas"></canvas>
+<script>
+/* ================= NEURO NEST — Mind Operating System =================
+   Single-file demo app. All data stays on your device (localStorage when
+   available, in-memory otherwise). Rule-based emotion-aware AI, no network
+   calls required. */
+
+/* ---------------- Storage (sandbox-safe) ---------------- */
+const storage = (() => {
+  const mem = {}; let ok = false;
+  try { localStorage.setItem('__nn_t','1'); localStorage.removeItem('__nn_t'); ok = true; } catch(e){}
+  return {
+    get(k, d){ if (ok) { try { const v = localStorage.getItem(k); if (v !== null) return JSON.parse(v); } catch(e){} } return (k in mem) ? mem[k] : d; },
+    set(k, v){ mem[k] = v; if (ok) { try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} } },
+    clear(){ mem.__wipe = 1; if (ok) { try { localStorage.removeItem('neuronest_v1'); } catch(e){} } }
+  };
+})();
+
+/* ---------------- Utils ---------------- */
+const $  = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
+const INR = n => '₹' + Number(n).toLocaleString('en-IN');
+const fmtN = n => Number(n).toLocaleString('en-IN');
+const pad = n => String(n).padStart(2,'0');
+const todayISO = (d=new Date()) => d.toISOString().slice(0,10);
+function addDaysISO(iso, n){ const d = new Date(iso+'T12:00:00'); d.setDate(d.getDate()+n); return todayISO(d); }
+function dayName(iso, short=true){ return new Date(iso+'T12:00:00').toLocaleDateString('en-IN', { weekday: short?'short':'long' }); }
+function niceDate(iso){ return new Date(iso+'T12:00:00').toLocaleDateString('en-IN', { day:'numeric', month:'short' }); }
+function relDays(iso){ const diff = Math.round((new Date(todayISO()+'T12:00:00') - new Date(iso+'T12:00:00'))/86400000); if(diff<=0) return 'today'; if(diff===1) return 'yesterday'; return diff+'d ago'; }
+function nowTime(){ const d = new Date(); return pad(d.getHours())+':'+pad(d.getMinutes()); }
+function uid(){ return Math.random().toString(36).slice(2,8).toUpperCase(); }
+function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function avg(arr){ return arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : 0; }
+
+/* ---------------- Icons ---------------- */
+const I = {
+  grid:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>',
+  chat:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-8 8H5l-2 2V12a8 8 0 0 1 8-8h2a8 8 0 0 1 8 8z"/><path d="M8.5 11h.01M12 11h.01M15.5 11h.01"/></svg>',
+  timer:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/></svg>',
+  brain:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44A2.5 2.5 0 0 1 4 17.5v-11A2.5 2.5 0 0 1 6.5 4 2.5 2.5 0 0 1 9.5 2z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44A2.5 2.5 0 0 0 20 17.5v-11A2.5 2.5 0 0 0 17.5 4 2.5 2.5 0 0 0 14.5 2z"/></svg>',
+  heart:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7.5-4.6-9.5-9A5.5 5.5 0 0 1 12 6a5.5 5.5 0 0 1 9.5 6c-2 4.4-9.5 9-9.5 9z"/><path d="M12 10v6M9 13h6"/></svg>',
+  chart:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg>',
+  shield:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-3.5 8-10V5l-8-3-8 3v7c0 6.5 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>',
+  access:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="4.5" r="1.6"/><path d="M5 8.5c2.3 1.4 4.6 2 7 2s4.7-.6 7-2M12 10.5v5M12 15.5l-3 6M12 15.5l3 6"/></svg>',
+  gear:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1-1.55 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.55-1 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34h0a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55h0a1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87v0a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1z"/></svg>',
+  fire:'<svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M12 22c4.4 0 7-2.8 7-6.5 0-4.8-4.2-7-5.5-11.5-2.3 1.4-3 3.9-2.6 6.2C9.4 9 8.6 7.4 8.6 5.5 6 7.4 5 10.2 5 12.9 5 19.2 7.6 22 12 22z" fill="url(#gf)"/><defs><linearGradient id="gf" x1="12" y1="2" x2="12" y2="22"><stop stop-color="#fb923c"/><stop offset="1" stop-color="#f43f5e"/></linearGradient></defs></svg>',
+  bolt:'<svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M13 2L4.5 13.5h6L10 22l8.5-11.5h-6L13 2z" fill="url(#gb)"/><defs><linearGradient id="gb" x1="12" y1="2" x2="12" y2="22"><stop stop-color="#fde047"/><stop offset="1" stop-color="#f59e0b"/></linearGradient></defs></svg>',
+  clockMini:'<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="#c4b0ff" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>',
+  check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>',
+  x:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>',
+  send:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4z"/></svg>',
+  play:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l13-7.5z"/></svg>',
+  pause:'<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1.2"/><rect x="14" y="4" width="4" height="16" rx="1.2"/></svg>',
+  reset:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>',
+  star:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.2 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z"/></svg>',
+  lock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2.5"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>',
+  spark:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>',
+  cal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2.5"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>',
+  video:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="13" height="12" rx="2.5"/><path d="M15 10.5l7-3.5v10l-7-3.5"/></svg>',
+  mic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2.5" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3.5"/></svg>',
+  moon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"/></svg>',
+  target:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/></svg>',
+  chain:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 14.5l5-5M8 12l-2.8 2.8a3.8 3.8 0 0 0 5.4 5.4L13.4 17.4M16 12l2.8-2.8a3.8 3.8 0 0 0-5.4-5.4L10.6 6.6"/></svg>',
+  zap:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L4.5 13.5h6L10 22l8.5-11.5h-6L13 2z"/></svg>',
+  user:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.4-3.6 4.4-5.5 8-5.5s6.6 1.9 8 5.5"/></svg>',
+  lang:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/></svg>',
+  bot:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="8" width="16" height="12" rx="3"/><path d="M12 8V4M9 4h6M9 14h.01M15 14h.01"/></svg>'
+};
+
+/* ---------------- i18n ---------------- */
+const I18N = {
+  en: { dashboard:'Dashboard', chat:'AI Companion', focus:'Focus Mode', cognitive:'Cognitive Lab', therapy:'Therapy Hub', analytics:'Analytics', preventive:'Preventive AI', neurodiverse:'Neurodiverse Mode', settings:'Settings',
+    goodMorning:'Good morning', goodAfternoon:'Good afternoon', goodEvening:'Good evening',
+    howFeeling:'How are you feeling today?', startFocus:'Start Focus Mode', talkToAI:'Talk to AI', save:'Save Changes' },
+  hi: { dashboard:'डैशबोर्ड', chat:'एआई साथी', focus:'फ़ोकस मोड', cognitive:'कॉग्निटिव लैब', therapy:'थेरेपी हब', analytics:'विश्लेषण', preventive:'प्रिवेंटिव एआई', neurodiverse:'न्यूरोडाइवर्स मोड', settings:'सेटिंग्स',
+    goodMorning:'सुप्रभात', goodAfternoon:'नमस्ते', goodEvening:'शुभ संध्या',
+    howFeeling:'आज आप कैसा महसूस कर रहे हैं?', startFocus:'फ़ोकस मोड शुरू करें', talkToAI:'एआई से बात करें', save:'बदलाव सहेजें' },
+  hinglish: { dashboard:'Dashboard', chat:'AI Saathi', focus:'Focus Mode', cognitive:'Cognitive Lab', therapy:'Therapy Hub', analytics:'Analytics', preventive:'Preventive AI', neurodiverse:'Neurodiverse Mode', settings:'Settings',
+    goodMorning:'Good morning', goodAfternoon:'Namaste', goodEvening:'Shubh sandhya',
+    howFeeling:'Aaj aap kaisa feel kar rahe ho?', startFocus:'Focus Mode shuru karo', talkToAI:'AI se baat karo', save:'Save Changes' }
+};
+function t(k){ const L = I18N[S.settings.language] || I18N.en; return L[k] || I18N.en[k] || k; }
+function greeting(){ const h = new Date().getHours(); return t(h < 12 ? 'goodMorning' : h < 17 ? 'goodAfternoon' : 'goodEvening'); }
+
+/* ---------------- State ---------------- */
+const PAGES = [
+  { id:'dashboard',   key:'dashboard',   sub:'Your mind, at a glance',                              icon:'grid' },
+  { id:'chat',        key:'chat',        sub:'<span class="live-dot"></span> Online · Emotion-aware', icon:'chat' },
+  { id:'focus',       key:'focus',       sub:'Pomodoro sessions with ambient soundscapes',           icon:'timer' },
+  { id:'cognitive',   key:'cognitive',   sub:'Train your brain with science-backed exercises',       icon:'brain' },
+  { id:'therapy',     key:'therapy',     sub:'Connect with verified mental health professionals',    icon:'heart' },
+  { id:'analytics',   key:'analytics',   sub:'Deep insights into your mental performance',           icon:'chart' },
+  { id:'preventive',  key:'preventive',  sub:'AI-powered burnout detection & stress prediction',     icon:'shield' },
+  { id:'neurodiverse',key:'neurodiverse',sub:'Accessible tools designed for every mind',             icon:'access' },
+  { id:'settings',    key:'settings',    sub:'Personalize your Neuro Nest experience',               icon:'gear' },
+];
+
+function defaultState(){
+  const today = todayISO();
+  const d = n => addDaysISO(today, -n);
+  const moods = [ // last 7 days, oldest first: Mon..Sun pattern relative to today
+    { date:d(6), mood:4, energy:4, stress:2, sleep:7.5, note:'' },
+    { date:d(5), mood:3, energy:3, stress:3, sleep:7.0, note:'' },
+    { date:d(4), mood:3, energy:3, stress:4, sleep:6.5, note:'' },
+    { date:d(3), mood:2, energy:2, stress:5, sleep:6.0, note:'Rough day' },
+    { date:d(2), mood:3, energy:3, stress:4, sleep:7.0, note:'' },
+    { date:d(1), mood:4, energy:4, stress:3, sleep:8.0, note:'' },
+  ];
+  const focus = {}; // 14 days of focus minutes — this week ~15% above last week
+  const lastWeek = [95, 150, 125, 170, 140, 40, 20];
+  const thisWeek = [110, 175, 140, 195, 160, 45, 25];
+  for (let i=0;i<7;i++) focus[d(13-i)] = lastWeek[i];
+  for (let i=0;i<7;i++) focus[d(6-i)]  = thisWeek[i];
+  focus[today] = 0;
+  const heat = { // productivity heatmap: 6 blocks per weekday (6a-9a, 9a-12p, 12-3p, 3-6p, 6-9p, 9p-12a)
+    0:[8,55,38,52,20,6], 1:[10,72,30,64,18,4], 2:[6,60,45,38,26,10], 3:[12,78,22,70,15,2], 4:[9,48,55,44,30,12], 5:[20,35,18,15,42,25], 6:[15,22,10,28,50,38]
+  };
+  return {
+    v:1, seeded:true,
+    profile:{ name:'Alex Kumar', email:'alex.kumar@email.com', occupation:'Software Developer', goal:'Improve Focus & Productivity' },
+    settings:{ language:'en', personality:'compassionate', reducedMotion:false, highContrast:false, screenReader:false, colorBlind:false, largeText:false },
+    plan:'free',
+    xp:2450, streak:12, brainScore:742, exercisesDone:48, cogStreak:7,
+    gameLevels:{ memory:5, focus:3, logic:4, speed:2 },
+    gameXP:{ memory:120, focus:80, logic:100, speed:60 },
+    moodLogs:moods, focusMinutes:focus, heat, bookings:[], emotionLog:[],
+    chat:[], chatUsage:{ date:today, n:0 },
+    completedToday:0
+  };
+}
+let S = storage.get('neuronest_v1', null);
+if (!S || !S.seeded) { S = defaultState(); storage.set('neuronest_v1', S); }
+function save(){ storage.set('neuronest_v1', S); }
+function addXP(n, why){ S.xp += n; save(); refreshHUD(); if (why) toast('+' + n + ' XP — ' + why, 'success'); }
+
+/* ---------------- Toasts ---------------- */
+function toast(msg, type='info', ms=3600){
+  const el = document.createElement('div');
+  el.className = 'toast ' + type;
+  const em = type==='success' ? '✅' : type==='warn' ? '⚠️' : '💜';
+  el.innerHTML = '<span class="t-emoji">'+em+'</span><span>'+msg+'</span>';
+  $('#toastRoot').appendChild(el);
+  if (S.settings.screenReader) el.setAttribute('role','status');
+  setTimeout(()=>{ el.style.transition='opacity .4s, transform .4s'; el.style.opacity='0'; el.style.transform='translateX(20px)'; setTimeout(()=>el.remove(), 420); }, ms);
+}
+
+/* ---------------- Modal ---------------- */
+function openModal(html, wide=false){
+  $('#modalRoot').innerHTML = '<div class="overlay" data-overlay="1"><div class="modal'+(wide?' wide':'')+'" role="dialog" aria-modal="true">'+html+'</div></div>';
+  document.body.style.overflow = 'hidden';
+}
+function closeModal(){ $('#modalRoot').innerHTML = ''; document.body.style.overflow = ''; }
+const modalHead = (title, sub) => '<div class="m-head"><h3>'+title+'</h3>'+(sub?'<p class="m-sub">'+sub+'</p>':'')+'<button class="m-close" data-action="closeModal" aria-label="Close">'+I.x+'</button></div>';
+
+/* ---------------- Navigation / shell ---------------- */
+let currentPage = 'dashboard';
+function buildSidebar(){
+  $('#sideNav').innerHTML = PAGES.map(p =>
+    '<button class="nav-item" data-action="go" data-page="'+p.id+'" id="nav-'+p.id+'">'+I[p.icon]+'<span>'+t(p.key)+'</span></button>'
+  ).join('');
+}
+function go(page){
+  currentPage = page;
+  $$('.page').forEach(p => p.classList.remove('active'));
+  const el = $('#page-'+page); if (el) el.classList.add('active');
+  $$('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.page === page));
+  const meta = PAGES.find(p => p.id === page);
+  $('#tbTitle').textContent = t(meta.key);
+  $('#tbSub').innerHTML = meta.sub;
+  $('#sidebar').classList.remove('open'); $('#backdrop').classList.remove('show');
+  window.scrollTo({ top:0 });
+  const renderers = { dashboard:renderDashboard, chat:renderChat, focus:renderFocus, cognitive:renderCognitive, therapy:renderTherapy, analytics:renderAnalytics, preventive:renderPreventive, neurodiverse:renderNeurodiverse, settings:renderSettings };
+  renderers[page]();
+  if (S.settings.screenReader) announce('Opened ' + t(meta.key));
+}
+function refreshHUD(){
+  $('#pillStreak').innerHTML = I.fire + ' <span>' + S.streak + '</span>';
+  $('#pillXP').innerHTML = I.bolt + ' <span>' + fmtN(S.xp) + '</span>';
+  const initials = S.profile.name.trim().split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase() || 'U';
+  $('#sideAvatar').textContent = initials; $('#tbAvatar').textContent = initials;
+  $('#sideName').textContent = S.profile.name;
+  $('#sidePlan').textContent = S.plan === 'pro' ? 'PRO PLAN' : 'FREE PLAN';
+  $('#upgradeBtn').style.display = S.plan === 'pro' ? 'none' : '';
+}
+function applyA11y(){
+  document.body.classList.toggle('reduce-motion', !!S.settings.reducedMotion);
+  document.body.classList.toggle('hc', !!S.settings.highContrast);
+  document.body.classList.toggle('cb', !!S.settings.colorBlind);
+  document.body.classList.toggle('sr', !!S.settings.screenReader);
+  document.documentElement.classList.toggle('font-lg', !!S.settings.largeText);
+  save();
+}
+function announce(msg){ const r = $('#toastRoot'); r.setAttribute('aria-live','polite'); /* toasts are already announced */ }
+
+/* ---------------- Confetti ---------------- */
+function confetti(){
+  if (S.settings.reducedMotion) return;
+  const cv = $('#confettiCanvas'), ctx = cv.getContext('2d');
+  cv.width = innerWidth; cv.height = innerHeight;
+  const colors = ['#8b5cf6','#6366f1','#34d399','#fbbf24','#f87171','#38bdf8'];
+  const parts = Array.from({length:90}, () => ({
+    x: Math.random()*cv.width, y: -20 - Math.random()*cv.height*0.4,
+    r: 4 + Math.random()*5, c: colors[Math.floor(Math.random()*colors.length)],
+    vy: 2.6 + Math.random()*3.4, vx: -1.6 + Math.random()*3.2, rot: Math.random()*Math.PI, vr: -.12 + Math.random()*.24
+  }));
+  let frames = 0;
+  (function tick(){
+    ctx.clearRect(0,0,cv.width,cv.height);
+    parts.forEach(p => { p.x+=p.vx; p.y+=p.vy; p.rot+=p.vr;
+      ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot); ctx.fillStyle=p.c; ctx.fillRect(-p.r/2,-p.r/2,p.r,p.r*0.62); ctx.restore(); });
+    if (++frames < 130) requestAnimationFrame(tick); else ctx.clearRect(0,0,cv.width,cv.height);
+  })();
+}
+
+/* ---------------- Metrics engine ---------------- */
+function lastNDaysMood(n){ // oldest -> newest, includes today if logged
+  const out = [];
+  for (let i=n-1;i>=0;i--){ const iso = addDaysISO(todayISO(), -i); const m = S.moodLogs.find(x=>x.date===iso); if (m) out.push(m); }
+  return out;
+}
+function metrics(){
+  const week = lastNDaysMood(7);
+  const moodAvg = avg(week.map(m=>m.mood));
+  const sleepAvg = avg(week.map(m=>m.sleep));
+  const stressPct = clamp(Math.round(avg(week.map(m=>m.stress))/5*100), 0, 100);
+  const sleepDebt = +week.reduce((a,m)=>a+Math.max(0, 8-m.sleep), 0).toFixed(1);
+  const focusThis = Object.entries(S.focusMinutes).filter(([d]) => d > addDaysISO(todayISO(),-7) && d <= todayISO()).reduce((a,[,v])=>a+v,0);
+  const focusPrev = Object.entries(S.focusMinutes).filter(([d]) => d > addDaysISO(todayISO(),-14) && d <= addDaysISO(todayISO(),-7)).reduce((a,[,v])=>a+v,0);
+  const overwork = clamp(Math.round(focusThis/7/240*100), 0, 100);
+  const burnout = clamp(Math.round(stressPct*0.45 + clamp((8-sleepAvg)/8,0,1)*100*0.3 + overwork*0.25), 0, 100);
+  const recovery = clamp(Math.round(moodAvg/5*45 + clamp(sleepAvg/8,0,1)*35 + (1-stressPct/100)*20), 0, 100);
+  const vitality = clamp(Math.round(recovery*0.72 + (100-burnout)*0.18 + Math.min(S.streak,10)*1.0), 0, 100);
+  return { moodAvg, sleepAvg, stressPct, sleepDebt, focusThis, focusPrev, burnout, recovery, vitality };
+}
+const lvl = (v, low, mid, rev=false) => { const s = v < low ? (rev?'High':'Low') : v < mid ? 'Moderate' : (rev?'Low':'High'); return s; };
+function statusColor(v, low, mid, rev){ const s = lvl(v, low, mid, rev); return s==='Low' ? 'var(--good)' : s==='Moderate' ? 'var(--warn)' : 'var(--bad)'; }
+function ringSVG(pct, size=118, stroke=11, color='url(#ringGrad)', centerHTML=''){
+  const r = (size-stroke)/2, c = 2*Math.PI*r, off = c*(1-clamp(pct,0,100)/100);
+  return '<div class="gauge" style="width:'+size+'px;height:'+size+'px">'+
+    '<svg width="'+size+'" height="'+size+'" viewBox="0 0 '+size+' '+size+'">'+
+    '<defs><linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8b5cf6"/><stop offset="1" stop-color="#6366f1"/></linearGradient></defs>'+
+    '<circle cx="'+size/2+'" cy="'+size/2+'" r="'+r+'" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="'+stroke+'"/>'+
+    '<circle cx="'+size/2+'" cy="'+size/2+'" r="'+r+'" fill="none" stroke="'+color+'" stroke-width="'+stroke+'" stroke-linecap="round" stroke-dasharray="'+c.toFixed(1)+'" stroke-dashoffset="'+off.toFixed(1)+'"/></svg>'+
+    '<div class="g-label">'+centerHTML+'</div></div>';
+}
+
+/* ================= DASHBOARD ================= */
+function todayLog(){ return S.moodLogs.find(m => m.date === todayISO()); }
+function renderDashboard(){
+  const M = metrics();
+  const name = S.profile.name.split(' ')[0] || 'friend';
+  const focusDelta = M.focusPrev ? Math.round((M.focusThis - M.focusPrev)/M.focusPrev*100) : 0;
+  const insight = focusDelta > 5
+    ? 'Your focus is up <b class="delta-up">+'+focusDelta+'%</b> this week. Keep the momentum going!'
+    : focusDelta < -5
+    ? 'Focus dipped a little this week (<b class="delta-down">'+focusDelta+'%</b>). A short session today can rebuild the rhythm.'
+    : 'Your week has been steady. Small, consistent check-ins are what build real change.';
+  const tl = todayLog();
+  const nextBooking = S.bookings.filter(b=>b.date>=todayISO()).sort((a,b)=>a.date.localeCompare(b.date))[0];
+  const suggestion = dailySuggestion(M, tl);
+
+  $('#page-dashboard').innerHTML =
+  '<div class="hero">'+
+    '<h2>'+greeting()+', '+esc(name)+' 👋</h2>'+
+    '<p class="hero-sub">'+insight+'</p>'+
+    '<div class="hero-actions">'+
+      '<button class="btn btn-primary" data-action="go" data-page="focus">'+I.timer+' '+t('startFocus')+'</button>'+
+      '<button class="btn btn-ghost" data-action="go" data-page="chat">'+I.chat+' '+t('talkToAI')+'</button>'+
+    '</div>'+
+    '<div class="hero-deco" aria-hidden="true">'+ringSVG(M.vitality, 132, 12, 'url(#ringGrad)', '<div style="font-size:1.7rem;font-weight:800">'+M.vitality+'</div><div class="tiny muted" style="margin-top:-4px">Vitality</div>')+'</div>'+
+  '</div>'+
+
+  '<div class="grid g3 mt">'+
+    '<div class="card stat-card">'+ringSVG(M.vitality, 118, 11, 'url(#ringGrad)', '<div class="stat-num">'+M.vitality+'</div>')+
+      '<div class="stat-label" style="margin-top:10px">Vitality Score <span class="muted">/ 100</span></div></div>'+
+    '<div class="card stat-card"><div class="stat-ico">🔥</div><div class="stat-num">'+S.streak+'</div><div class="stat-label">Day Streak</div></div>'+
+    '<div class="card stat-card"><div class="stat-ico">⚡</div><div class="stat-num">'+fmtN(S.xp)+'</div><div class="stat-label">XP Points</div></div>'+
+  '</div>'+
+
+  '<div class="grid g23 mt">'+
+    '<div class="card">'+
+      '<div class="card-title">'+I.moon+' Daily Check-in</div>'+
+      '<p class="card-sub">'+t('howFeeling')+'</p>'+
+      (tl
+        ? '<div class="insight"><div class="i-ico">'+moodEmoji(tl.mood)+'</div><div>Checked in today — mood '+moodWord(tl.mood).toLowerCase()+', '+tl.sleep+'h sleep, stress '+tl.stress+'/5.'+
+          ' <button class="chip" style="margin-left:6px" data-action="openCheckin">Edit</button></div></div>'
+        : '<div class="emoji-row">'+[1,2,3,4,5].map(v=>'<button class="emoji-btn" data-action="openCheckin" data-mood="'+v+'" aria-label="Mood '+v+'">'+moodEmoji(v)+'</button>').join('')+'</div>')+
+    '</div>'+
+    '<div class="card">'+
+      '<div class="card-title">'+I.spark+' AI Suggestion</div>'+
+      '<p class="card-sub">Personalized for today</p>'+
+      '<div class="stack" style="gap:12px">'+suggestion+'</div>'+
+    '</div>'+
+  '</div>'+
+
+  '<div class="grid g4 mt">'+
+    '<div class="card stat-card"><div class="stat-ico">😴</div><div class="stat-num" style="font-size:1.5rem">'+(tl?tl.sleep:M.sleepAvg.toFixed(1))+'h</div><div class="stat-label">Sleep Last Night</div></div>'+
+    '<div class="card stat-card"><div class="stat-ico">🎯</div><div class="stat-num" style="font-size:1.5rem">'+(S.focusMinutes[todayISO()]||0)+'m</div><div class="stat-label">Focus Today</div></div>'+
+    '<div class="card stat-card"><div class="stat-ico">🧠</div><div class="stat-num" style="font-size:1.5rem">'+S.brainScore+'</div><div class="stat-label">Brain Score</div></div>'+
+    '<div class="card stat-card"><div class="stat-ico">📊</div><div class="stat-num" style="font-size:1.5rem">'+M.stressPct+'%</div><div class="stat-label">Stress Level</div></div>'+
+  '</div>'+
+
+  (nextBooking
+    ? '<div class="card mt" style="border-color:rgba(139,92,246,.4)"><div class="spread wrap">'+
+        '<div class="row">'+I.cal+'<div><b>Upcoming session</b> — '+esc(nextBooking.doc)+'<div class="small muted">'+niceDate(nextBooking.date)+' · '+nextBooking.time+' · '+nextBooking.mode+'</div></div></div>'+
+        '<button class="btn btn-soft btn-sm" data-action="go" data-page="therapy">View details</button></div></div>'
+    : '<div class="card mt" style="border-style:dashed"><div class="spread wrap">'+
+        '<div class="row">🩺<div><b>Feeling stuck?</b><div class="small muted">Book a session with a verified professional — psychiatrists & therapists available.</div></div></div>'+
+        '<button class="btn btn-primary btn-sm" data-action="go" data-page="therapy">Browse Therapy Hub</button></div></div>');
+}
+const moodEmoji = v => ['😞','😕','😐','🙂','😄'][clamp(v,1,5)-1];
+const moodWord = v => ['Very low','Low','Okay','Good','Great'][clamp(v,1,5)-1];
+function dailySuggestion(M, tl){
+  const out = [];
+  if (!tl) out.push('<div class="small">Start with a 20-second mood check-in — it powers all your insights.</div><button class="btn btn-soft btn-sm" data-action="openCheckin">Quick check-in</button>');
+  if (M.sleepAvg < 7) out.push('<div class="small">😴 You averaged <b>'+M.sleepAvg.toFixed(1)+'h</b> sleep this week. Try moving bedtime 30 minutes earlier tonight.</div>');
+  if (M.stressPct >= 55) out.push('<div class="small">🫁 Stress is elevated (<b>'+M.stressPct+'%</b>). A 4-7-8 breathing cycle takes 19 seconds — try one now.</div><button class="btn btn-soft btn-sm" data-action="breathe">Start breathing</button>');
+  if (M.burnout >= 60) out.push('<div class="small">🛟 Burnout risk is <b>'+M.burnout+'%</b>. Consider a recovery day — real rest is productive.</div><button class="btn btn-soft btn-sm" data-action="go" data-page="preventive">See Preventive AI</button>');
+  if (!out.length) out.push('<div class="small">💚 Everything looks balanced. Protect the streak — a 10-minute Quick Sprint keeps momentum alive.</div><button class="btn btn-soft btn-sm" data-action="go" data-page="focus">Quick Sprint</button>');
+  return out.slice(0,2).join('');
+}
+
+/* ================= CHECK-IN ================= */
+let CHECKIN = null;
+function openCheckin(mood){
+  const tl = todayLog();
+  CHECKIN = { mood: mood || (tl ? tl.mood : 3), energy: tl ? tl.energy : 3, stress: tl ? tl.stress : 3, sleep: tl ? tl.sleep : 7, note: tl ? tl.note : '' };
+  drawCheckin();
+}
+function drawCheckin(){
+  openModal(
+    modalHead('Daily Check-in','Takes 20 seconds — powers your Analytics & Preventive AI')+
+    '<label class="fld">Mood</label>'+
+    '<div class="emoji-row" id="ck-mood">'+[1,2,3,4,5].map(v=>'<button class="emoji-btn'+(CHECKIN.mood===v?' on':'')+'" data-action="ckMood" data-v="'+v+'">'+moodEmoji(v)+'</button>').join('')+'</div>'+
+    '<div class="mt"></div><label class="fld">Energy — <span id="ck-energy-v">'+CHECKIN.energy+'/5</span></label>'+
+    '<input type="range" min="1" max="5" step="1" value="'+CHECKIN.energy+'" data-input="ckEnergy" style="width:100%">'+
+    '<div class="mt"></div><label class="fld">Stress — <span id="ck-stress-v">'+CHECKIN.stress+'/5</span></label>'+
+    '<input type="range" min="1" max="5" step="1" value="'+CHECKIN.stress+'" data-input="ckStress" style="width:100%">'+
+    '<div class="mt"></div><label class="fld">Hours of sleep last night</label>'+
+    '<input type="number" class="txt" id="ck-sleep" min="0" max="14" step="0.5" value="'+CHECKIN.sleep+'">'+
+    '<div class="mt"></div><label class="fld">Note (optional)</label>'+
+    '<textarea id="ck-note" rows="2" placeholder="Anything on your mind today?">'+esc(CHECKIN.note)+'</textarea>'+
+    '<div class="row mt" style="justify-content:flex-end"><button class="btn btn-ghost" data-action="closeModal">Cancel</button><button class="btn btn-primary" data-action="saveCheckin">'+I.check+' Save check-in</button></div>'
+  );
+}
+function saveCheckin(){
+  CHECKIN.sleep = clamp(parseFloat($('#ck-sleep').value) || 0, 0, 14);
+  CHECKIN.note = $('#ck-note').value.trim();
+  const existing = S.moodLogs.findIndex(m => m.date === todayISO());
+  if (existing >= 0) S.moodLogs[existing] = { date:todayISO(), ...CHECKIN };
+  else S.moodLogs.push({ date:todayISO(), ...CHECKIN });
+  addXP(15, 'daily check-in');
+  save(); closeModal();
+  const msg = CHECKIN.mood <= 2
+    ? 'Thanks for being honest. Low days are part of the picture — your insights have been updated. 💜'
+    : CHECKIN.mood >= 4
+    ? 'Logged! Days like this are worth noticing — great work. ✨'
+    : 'Check-in saved. Your dashboard insights have been updated.';
+  toast(msg, 'success');
+  if (currentPage === 'dashboard') renderDashboard();
+}
+
+/* ================= ANALYTICS ================= */
+function svgLine(vals, labels, min, max, color='#a78bfa'){
+  const w=340, h=150, pl=10, pr=10, pt=16, pb=26;
+  const iw = w-pl-pr, ih = h-pt-pb;
+  const X = i => pl + (vals.length===1 ? iw/2 : i*iw/(vals.length-1));
+  const Y = v => pt + (1-(clamp(v,min,max)-min)/(max-min))*ih;
+  let path = '', area = '';
+  vals.forEach((v,i) => { path += (i?'L':'M') + X(i).toFixed(1) + ' ' + Y(v).toFixed(1) + ' '; });
+  area = path + 'L' + X(vals.length-1).toFixed(1) + ' ' + (pt+ih) + ' L' + X(0).toFixed(1) + ' ' + (pt+ih) + ' Z';
+  const dots = vals.map((v,i) => '<circle cx="'+X(i).toFixed(1)+'" cy="'+Y(v).toFixed(1)+'" r="4" fill="'+color+'" stroke="#12121e" stroke-width="2"><title>'+labels[i]+': '+v+'</title></circle>').join('');
+  const xlabels = labels.map((l,i) => '<text x="'+X(i).toFixed(1)+'" y="'+(h-8)+'" font-size="9.5" fill="#6d6a8a" text-anchor="middle">'+l+'</text>').join('');
+  return '<svg viewBox="0 0 '+w+' '+h+'" role="img">'+
+    '<defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="'+color+'" stop-opacity=".3"/><stop offset="1" stop-color="'+color+'" stop-opacity="0"/></linearGradient></defs>'+
+    '<path d="'+area+'" fill="url(#ag)"/>'+
+    '<path d="'+path+'" fill="none" stroke="'+color+'" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>'+
+    dots + xlabels + '</svg>';
+}
+function svgBars(vals, labels, opts){
+  opts = opts || {};
+  const goal = opts.goal || null, unit = opts.unit || '', color = opts.color || '#8b5cf6';
+  const w=340, h=150, pl=10, pr=10, pt=14, pb=26;
+  const iw = w-pl-pr, ih = h-pt-pb;
+  const max = opts.maxOverride || Math.max(...vals, goal||0) * 1.15 || 1;
+  const bw = Math.min(30, iw/vals.length*0.55);
+  const bars = vals.map((v,i) => {
+    const x = pl + (i+0.5)*iw/vals.length - bw/2, bh = clamp(v/max,0,1)*ih, y = pt+ih-bh;
+    return '<rect x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+bh.toFixed(1)+'" rx="5" fill="'+color+'" opacity="'+(v?'.92':'.25')+'"><title>'+labels[i]+': '+v+unit+'</title></rect>';
+  }).join('');
+  const xlabels = labels.map((l,i) => '<text x="'+(pl+(i+0.5)*iw/vals.length).toFixed(1)+'" y="'+(h-8)+'" font-size="9.5" fill="#6d6a8a" text-anchor="middle">'+l+'</text>').join('');
+  const goalLine = goal ? '<line x1="'+pl+'" y1="'+(pt+ih-ih*goal/max).toFixed(1)+'" x2="'+(w-pr)+'" y2="'+(pt+ih-ih*goal/max).toFixed(1)+'" stroke="#34d399" stroke-width="1.6" stroke-dasharray="5 5"/><text x="'+(w-pr)+'" y="'+(pt+ih-ih*goal/max-4).toFixed(1)+'" font-size="9" fill="#34d399" text-anchor="end">goal '+goal+unit+'</text>' : '';
+  return '<svg viewBox="0 0 '+w+' '+h+'" role="img">'+bars+goalLine+xlabels+'</svg>';
+}
+function renderAnalytics(){
+  const M = metrics();
+  const week = lastNDaysMood(7);
+  const labels = week.map(m => dayName(m.date));
+  const moodVals = week.map(m => m.mood);
+  const sleepVals = week.map(m => m.sleep);
+  const focusVals = []; const focusLabels = [];
+  for (let i=6;i>=0;i--){ const iso = addDaysISO(todayISO(),-i); focusVals.push(S.focusMinutes[iso] || 0); focusLabels.push(dayName(iso)); }
+
+  // Heatmap (Mon..Sun rows)
+  const days = [1,2,3,4,5,6,0];
+  const cols = ['6–9a','9–12','12–3','3–6','6–9p','9–12a'];
+  let heat = '<div class="heat-grid">';
+  heat += '<div></div>' + cols.map(c => '<div class="heat-col">'+c+'</div>').join('');
+  days.forEach(dw => {
+    heat += '<div class="heat-day">'+['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][dw]+'</div>';
+    (S.heat[dw]||[]).forEach(v => { const a = 0.06 + (v/100)*0.85; heat += '<div class="heat-cell" title="productivity '+v+'" style="background:rgba(139,92,246,'+a.toFixed(2)+')"></div>'; });
+  });
+  heat += '</div>';
+
+  // Emotion mix
+  const buckets = { Positive:0, Neutral:0, 'Low':0 };
+  week.forEach(m => { buckets[m.mood>=4?'Positive':m.mood===3?'Neutral':'Low']++; });
+  S.emotionLog.filter(e => e.date > addDaysISO(todayISO(),-7)).forEach(e => { if (['sadness','anxiety','anger','tired','lonely'].includes(e.emo)) buckets['Low']++; else if (e.emo==='happy') buckets['Positive']++; });
+  const total = buckets.Positive + buckets.Neutral + buckets['Low'] || 1;
+  const ecolors = { Positive:'var(--good)', Neutral:'#8b8cf7', 'Low':'var(--bad)' };
+  const elabels = { Positive:'🙂 Positive', Neutral:'😐 Neutral', 'Low':'😞 Low' };
+
+  const insights = weeklyInsights(M, week);
+
+  $('#page-analytics').innerHTML =
+    '<div class="grid g2">'+
+      '<div class="card"><div class="card-title">'+I.chart+' Mood Tracking</div><p class="card-sub">Last 7 days · from your daily check-ins</p><div class="chart-wrap">'+svgLine(moodVals, labels, 1, 5)+'</div></div>'+
+      '<div class="card"><div class="card-title">'+I.target+' Focus Trends</div><p class="card-sub">Minutes of deep focus per day</p><div class="chart-wrap">'+svgBars(focusVals, focusLabels, { unit:'m' })+'</div></div>'+
+    '</div>'+
+    '<div class="grid g2 mt">'+
+      '<div class="card"><div class="card-title">'+I.moon+' Sleep</div><p class="card-sub">Hours per night vs 8h goal</p><div class="chart-wrap">'+svgBars(sleepVals, labels, { goal:8, unit:'h', color:'#38bdf8' })+'</div></div>'+
+      '<div class="card"><div class="card-title">'+I.grid+' Productivity Heatmap</div><p class="card-sub">When your brain is switched on</p>'+heat+
+        '<div class="row mt" style="justify-content:flex-end"><span class="legend">Less <i style="background:rgba(139,92,246,.1)"></i><i style="background:rgba(139,92,246,.35)"></i><i style="background:rgba(139,92,246,.6)"></i><i style="background:rgba(139,92,246,.9)"></i> More</span></div></div>'+
+    '</div>'+
+    '<div class="grid g2 mt">'+
+      '<div class="card"><div class="card-title">'+I.spark+' Weekly AI Insights</div><p class="card-sub">Generated from your data</p><div class="stack">'+insights.map(x=>'<div class="insight"><div class="i-ico">'+x[0]+'</div><div>'+x[1]+'</div></div>').join('')+'</div></div>'+
+      '<div class="card"><div class="card-title">'+I.bot+' Emotion Mix</div><p class="card-sub">From check-ins &amp; AI conversations this week</p><div class="stack" style="gap:14px;margin-top:8px">'+
+        Object.entries(buckets).map(([k,v]) => { const p = Math.round(v/total*100);
+          return '<div class="emobar"><span style="width:88px">'+elabels[k]+'</span><span class="eb-track"><span class="eb-fill" style="width:'+p+'%;background:'+ecolors[k]+'"></span></span><b>'+p+'%</b></div>'; }).join('')+
+        '<p class="tiny muted">The more you check in and chat, the smarter this gets.</p></div></div>'+
+    '</div>';
+}
+function weeklyInsights(M, week){
+  const out = [];
+  if (M.focusPrev) { const d = Math.round((M.focusThis-M.focusPrev)/M.focusPrev*100);
+    out.push(d >= 0 ? ['📈','Productivity up <b>+'+d+'%</b> compared to last week. Streak consistency is the key.'] : ['📉','Productivity down <b>'+d+'%</b> vs last week — one short focus session today restarts the trend.']); }
+  out.push(['🎯','Your focus peaks between <b>9–11 AM</b>. Schedule deep work during this window.']);
+  const worst = [...week].sort((a,b)=>a.mood-b.mood)[0];
+  if (worst && worst.mood <= 3) out.push(['🌙','Mood dipped on <b>'+dayName(worst.date,false)+'</b> — possibly linked to '+worst.sleep+'h sleep. Consider a 30-min earlier bedtime.']);
+  if (M.sleepAvg < 7) out.push(['😴','You averaged <b>'+M.sleepAvg.toFixed(1)+'h</b> sleep ('+(8-M.sleepAvg).toFixed(1)+'h below goal). Sleep is the cheapest performance upgrade you have.']);
+  if (M.stressPct >= 55) out.push(['🫁','Stress averaged <b>'+M.stressPct+'%</b> this week. Micro-recovery (breathing, short walks) beats waiting for the weekend.']);
+  return out.slice(0,5);
+}
+
+/* ================= AI COMPANION ================= */
+const CRISIS_KW = ['kill myself','killing myself','suicide','suicidal','end my life','end it all','want to die','wanna die','self harm','self-harm','hurt myself','harming myself','no reason to live','better off dead',"don't want to live",'dont want to live'];
+const EMOTIONS = {
+  anxiety:{ kw:['anxious','anxiety','stress','stressed','stressing','worried','worry','nervous','panic','panicking','tense','overwhelm','overwhelmed','pressure','scared','afraid','fear','restless','on edge','uneasy'],
+    replies:[
+      'That sounds stressful — your mind is carrying a lot right now. Let\u2019s slow it down together.',
+      'Anxiety is your brain trying to protect you, even when it doesn\u2019t feel like it. Let\u2019s give it something calmer to hold onto.'],
+    sug:[['breathe','Try 4-7-8 breathing'],['focus','Start a Quick Sprint — it anchors attention'],['checkin','Log how you\u2019re feeling'],['therapy','Talk to a professional']] },
+  sadness:{ kw:['sad','down','depressed','depressing','cry','crying','empty','hopeless','low','unhappy','heartbroken','gloomy','miserable','hurt','pain','numb'],
+    replies:[
+      'That sounds really heavy. Feeling low doesn\u2019t mean something is wrong with you — it means you\u2019ve been carrying a lot.',
+      'I\u2019m sorry you\u2019re feeling this way. Your feelings are valid, and you don\u2019t have to figure everything out today.'],
+    sug:[['checkin','Log this feeling'],['breathe','Gentle breathing exercise'],['therapy','Book a therapy session'],['cognitive','A short brain game (gentle distraction)']] },
+  anger:{ kw:['angry','mad','furious','irritated','irritating','annoyed','frustrated','frustrating','rage','hate','pissed'],
+    replies:['Anger usually means a boundary got crossed or something important isn\u2019t being heard. It deserves acknowledgement, not suppression.',
+      'Frustration is energy with nowhere to go. Let\u2019s give it somewhere useful to go.'],
+    sug:[['breathe','Cool down: slow breathing'],['focus','Channel it into a Quick Sprint'],['checkin','Log how you\u2019re feeling']] },
+  tired:{ kw:['tired','exhausted','exhaustion','fatigue','fatigued','sleepy','drained','burnout','burnt out','burntout','no energy','worn out','wrecked'],
+    replies:['Feeling drained isn\u2019t laziness — it\u2019s your body asking for recovery. Real rest is productive too.',
+      'Running on empty makes everything feel harder than it is. You might need rest more than motivation.'],
+    sug:[['focus','Ocean sounds + a 10-min rest'],['preventive','Check your Recovery Score'],['checkin','Log energy levels']] },
+  lonely:{ kw:['lonely','alone','isolated','no one','nobody','no friends','left out','unseen','invisible'],
+    replies:['Feeling unseen is genuinely painful. You reached out here — that\u2019s a real start, and it counts.',
+      'Loneliness lies to you — it tells you no one cares while people would show up if they knew. Let\u2019s think about one person you could reach out to.'],
+    sug:[['therapy','Book a session — you deserve support'],['checkin','Log this feeling']] },
+  sleep:{ kw:['insomnia',"can't sleep",'cant sleep','sleep badly','slept badly','sleep problem','awake all night','nightmares','no sleep','bad sleep','trouble sleeping','sleepless'],
+    replies:['Poor sleep quietly amplifies everything else — mood, focus, stress. Small shifts in your evening routine help more than they sound.',
+      'Rough nights make rough days. Let\u2019s set up a wind-down plan for tonight.'],
+    sug:[['sleepplan','Get tonight\u2019s wind-down plan'],['focus','Lo-fi + 10-min wind-down'],['preventive','See your sleep debt']] },
+  focus:{ kw:["can't focus",'cant focus','distracted','distraction','procrastinat','unfocused','concentrate','concentration','unproductive','keep scrolling','doomscroll'],
+    replies:['Scattered focus is usually a signal, not a failure — most often stress or sleep debt. Let\u2019s shrink the task until it feels easy.',
+      'Your attention isn\u2019t broken; it\u2019s just under-supported. A tiny first step beats a perfect plan.'],
+    sug:[['focus','Start a 10-min Quick Sprint'],['cognitive','Play Focus Trainer'],['checkin','Log your state']] },
+  happy:{ kw:['happy','great','amazing','excited','grateful','wonderful','awesome','fantastic','joy','proud','better','good day','feeling good','elated','thrilled'],
+    replies:['That\u2019s wonderful to hear! Let\u2019s bottle this energy — noting what\u2019s working helps us repeat it.',
+      'Love that! Days like this are data too. What do you think contributed to it?'],
+    sug:[['checkin','Log it — it powers your trends'],['focus','Ride the wave: deep work'],['cognitive','Your brain is primed — play a game']] }
+};
+const INTENTS = [
+  { id:'book', kw:['book','appointment','session','therapist','therapy','psychiatrist','psychiatrists','doctor','counsellor','counselor'],
+    text:'I can help with that. The Therapy Hub has verified professionals — Dr. Priya Sharma for anxiety & stress, Dr. Ananya Reddy and Dr. Arjun Verma are psychiatrists for medication support, and more.',
+    sug:[['therapy','Open Therapy Hub'],['preventive','Or check your stress levels first']] },
+  { id:'focusIntent', kw:['pomodoro','focus session','timer','deep work','study'],
+    text:'Focus Mode has Deep Focus (25 min) and Quick Sprint (10 min) sessions with ambient soundscapes — rain, ocean, lo-fi and forest.',
+    sug:[['focus','Open Focus Mode']] },
+  { id:'game', kw:['game','brain','cognitive','memory','puzzle'],
+    text:'The Cognitive Lab has science-backed exercises — Memory Matrix, Focus Trainer and Logic Chains. Every game earns XP and lifts your Brain Score.',
+    sug:[['cognitive','Open Cognitive Lab']] },
+  { id:'track', kw:['mood','track','analytics','progress','stats','sleep track'],
+    text:'You can log mood, energy, stress and sleep with a 20-second daily check-in — then Analytics and Preventive AI turn it into insights.',
+    sug:[['checkin','Do today\u2019s check-in'],['analytics','View Analytics']] },
+  { id:'hi', kw:['hello','hi','hey','hii','namaste','good morning','good evening','yo'],
+    text:'Hey! I\u2019m your Neuro Nest companion 💜 I\u2019m here to help you with focus, productivity, mental health and decision-making. How are you feeling today?',
+    sug:[['checkin','Quick mood check-in']] },
+  { id:'thanks', kw:['thank','thanks','thx','shukriya','dhanyavad'],
+    text:'Anytime! I\u2019m here whenever you need me. Small check-ins add up — that\u2019s how streaks are built. 🔥',
+    sug:[] },
+  { id:'howareyou', kw:['how are you','how r u','kaise ho','whats up','what\u2019s up','sup'],
+    text:'I\u2019m good — and more importantly, I\u2019m here for you. How has your day been so far?',
+    sug:[] },
+  { id:'help', kw:['help','what can you do','features','who are you'],
+    text:'Here\u2019s what I can do: 💬 talk through how you\u2019re feeling · 📊 track mood, sleep, stress & focus · 🎯 run focus sessions with soundscapes · 🧠 train your brain in the Cognitive Lab · 🩺 help you book therapy or a psychiatry session · 🛟 flag burnout risk early. What shall we start with?',
+    sug:[['checkin','Check in'],['focus','Focus'],['cognitive','Cognitive Lab'],['therapy','Therapy']] }
+];
+const TONES = {
+  compassionate:{ emoji:'💚', name:'Compassionate', pre:['I\u2019m here with you. ','Thank you for trusting me with this. ','That takes courage to say. '] },
+  coach:{ emoji:'💪', name:'Coach', pre:['Okay, let\u2019s work with this. ','Got it — here\u2019s how we\u2019ll tackle it. ','Let\u2019s turn this into a plan. '] },
+  analytical:{ emoji:'📊', name:'Analytical', pre:['Let\u2019s look at what\u2019s going on. ','Noted — let\u2019s break this down. ','Here\u2019s my read on this. '] },
+  playful:{ emoji:'✨', name:'Playful', pre:['Okay, real talk time. ','Alright, let\u2019s unpack this together! ','I hear you — let\u2019s sort this out. '] }
+};
+const HELPLINES = 'If you\u2019re thinking about harming yourself, please reach out to a real person right now:<br><br>'+
+  '<b>Tele-MANAS (Govt of India)</b> — 14416 or 1-800-891-4416 (24×7, free, all languages)<br>'+
+  '<b>AASRA</b> — +91 9820466726 (24×7)<br>'+
+  '<b>iCall</b> — 9152987821 (Mon–Sat, 10 AM–8 PM)<br>'+
+  '<b>Emergency</b> — 112';
+const SLEEP_PLAN = 'Tonight\u2019s wind-down plan: ☕ no caffeine after 4 PM · 📵 screens off 45 min before bed (or night-mode + low brightness) · 🌡️ cool, dark room · 📝 brain-dump tomorrow\u2019s worries on paper · 🫁 4-7-8 breathing in bed · ⏰ same wake time as yesterday — consistency matters more than duration.';
+
+function detectCrisis(text){ const t = text.toLowerCase(); return CRISIS_KW.some(k => t.includes(k)); }
+function detectEmotion(text){
+  const t = ' ' + text.toLowerCase() + ' ';
+  let best = null, bestScore = 0;
+  for (const [name, e] of Object.entries(EMOTIONS)){
+    const score = e.kw.reduce((a,k) => a + (t.includes(k) ? k.length : 0), 0);
+    if (score > bestScore){ best = name; bestScore = score; }
+  }
+  return best;
+}
+function detectIntent(text){
+  const t = ' ' + text.toLowerCase() + ' ';
+  for (const it of INTENTS){ if (it.kw.some(k => t.includes(k))) return it; }
+  return null;
+}
+function botRespond(userText){
+  if (detectCrisis(userText)){
+    S.emotionLog.push({ date:todayISO(), emo:'crisis' }); save();
+    return { text:'I\u2019m really glad you told me this — you\u2019re not alone, and what you\u2019re feeling right now matters. Please don\u2019t carry this by yourself.<div class="crisis-box">'+HELPLINES+'</div>I can also help you book a session with a psychiatrist right away. If you\u2019re in immediate danger, please call 112 now.',
+      sug:[['therapy','Book a psychiatry session'],['breathe','Stay with me — slow breathing']] };
+  }
+  if (S.chatUsage.date !== todayISO()){ S.chatUsage = { date:todayISO(), n:0 }; }
+  const usageLimit = S.plan === 'pro' ? Infinity : 10;
+  if (S.chatUsage.n > usageLimit){
+    return { text:'You\u2019ve used all <b>'+usageLimit+' free messages</b> for today (they reset tomorrow midnight). Upgrade to Pro for unlimited conversations with your AI Mind Coach.',
+      sug:[['pricing','Upgrade to Pro'],['breathe','Free: breathing exercise']] };
+  }
+  const emo = detectEmotion(userText);
+  const intent = emo ? null : detectIntent(userText);
+  const tone = TONES[S.settings.personality] || TONES.compassionate;
+  const pre = tone.pre[Math.floor(Math.random()*tone.pre.length)];
+  let text, sug = [];
+  if (emo){
+    S.emotionLog.push({ date:todayISO(), emo }); save();
+    const bank = EMOTIONS[emo];
+    text = pre + bank.replies[Math.floor(Math.random()*bank.replies.length)];
+    sug = bank.sug;
+    const M = metrics();
+    if (['sadness','anxiety','anger','tired'].includes(emo) && M.sleepAvg < 7)
+      text += ' <span class="small muted">(Heads up: you averaged '+M.sleepAvg.toFixed(1)+'h sleep this week — that tends to amplify '+ (emo==='anxiety'?'anxiety':'feelings like this') + '.)</span>';
+  } else if (intent){
+    text = intent.text; sug = intent.sug;
+  } else {
+    text = pre + 'Thanks for sharing that with me. Tell me a little more — what\u2019s been going on? You can also describe a feeling in your own words (e.g. "stressed about exams" or "feeling lonely").';
+    sug = [['checkin','Do a quick check-in']];
+  }
+  return { text, sug };
+}
+function pushMsg(role, text, sug){
+  S.chat.push({ role, text, sug: sug||[], time: nowTime() });
+  save();
+}
+function welcomeMsg(){
+  return { text:'Hey! I\u2019m your Neuro Nest companion 💜 I\u2019m here to help you with focus, productivity, mental health and decision-making. How are you feeling today?',
+    sug:[] };
+}
+function sugButton(s){ // s = [target, label]
+  const map = { breathe:'breathe', focus:'go:focus', checkin:'openCheckin', therapy:'go:therapy', cognitive:'go:cognitive', analytics:'go:analytics', preventive:'go:preventive', pricing:'openPricing', sleepplan:'sleepplan' };
+  const target = map[s[0]] || 'openCheckin';
+  const action = target.startsWith('go:') ? 'go' : (target === 'breathe' ? 'breathe' : (target === 'sleepplan' ? 'sleepplan' : target));
+  const page = target.startsWith('go:') ? target.slice(3) : '';
+  return '<button class="chip" data-action="'+action+'"'+(page?' data-page="'+page+'"':'')+'>'+esc(s[1])+'</button>';
+}
+function renderChat(){
+  const el = $('#page-chat');
+  if (!S.chat.length){ const w = welcomeMsg(); pushMsg('bot', w.text); }
+  const msgs = S.chat.map(m =>
+    '<div class="msg '+m.role+'">'+
+      '<div class="m-ava">'+(m.role==='bot' ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>' : (S.profile.name[0]||'U'))+'</div>'+
+      '<div><div class="m-bubble">'+m.text+(m.sug && m.sug.length ? '<div class="m-sug">'+m.sug.map(sugButton).join('')+'</div>' : '')+'</div><div class="m-time">'+m.time+'</div></div>'+
+    '</div>').join('');
+  const remaining = S.plan==='pro' ? 'PRO · unlimited' : (10 - Math.min(S.chatUsage.n,10)) + '/10 free today';
+  el.innerHTML =
+    '<div class="chat-wrap">'+
+      '<div class="chat-scroll" id="chatScroll">'+msgs+'</div>'+
+      '<div class="chat-inputbar">'+
+        '<input class="chat-input" id="chatInput" placeholder="Type your message..." autocomplete="off" maxlength="500">'+
+        '<button class="send-btn" data-action="chatSend" aria-label="Send">'+I.send+'</button>'+
+        '<span class="usage-chip" id="usageChip">'+remaining+'</span>'+
+      '</div>'+
+    '</div>';
+  const sc = $('#chatScroll'); sc.scrollTop = sc.scrollHeight;
+  const input = $('#chatInput');
+  input.addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); chatSend(); } });
+}
+function chatSend(){
+  const input = $('#chatInput');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  if (S.chatUsage.date !== todayISO()) S.chatUsage = { date:todayISO(), n:0 };
+  const isCrisis = detectCrisis(text);
+  pushMsg('user', esc(text));
+  if (!isCrisis) S.chatUsage.n++;
+  save();
+  renderChat();
+  // typing indicator
+  const sc = $('#chatScroll');
+  const typ = document.createElement('div');
+  typ.className = 'msg bot'; typ.innerHTML = '<div class="m-ava">✦</div><div class="m-bubble typing"><i></i><i></i><i></i></div>';
+  sc.appendChild(typ); sc.scrollTop = sc.scrollHeight;
+  setTimeout(() => {
+    const reply = botRespond(text);
+    pushMsg('bot', reply.text, reply.sug);
+    save(); renderChat();
+  }, 700 + Math.random()*700);
+}
+
+/* ================= BREATHING ================= */
+let BREATHE = null;
+function openBreathe(){
+  BREATHE = { phase:0, t:0, cycles:0, running:true };
+  const phases = [['Breathe in',4],['Hold',7],['Breathe out',8]];
+  BREATHE.phases = phases;
+  $('#breatheRoot').innerHTML =
+    '<div class="breathe-overlay" data-breathe="1"><div class="breathe-box">'+
+      '<div class="b-circle" id="bCircle"><div><div class="b-count" id="bCount">4</div><div class="b-phase" id="bPhase">Breathe in</div></div></div>'+
+      '<p class="muted" style="margin-bottom:6px">4-7-8 breathing · calms the nervous system</p>'+
+      '<div class="b-cycles" id="bCycles">Cycle 1</div>'+
+      '<div class="row mt" style="justify-content:center"><button class="btn btn-ghost" data-action="closeBreathe">Finish</button></div>'+
+    '</div></div>';
+  document.body.style.overflow = 'hidden';
+  breatheTick();
+}
+function breatheTick(){
+  if (!BREATHE || !BREATHE.running) return;
+  const [label, dur] = BREATHE.phases[BREATHE.phase];
+  const circle = $('#bCircle');
+  const setPhaseUI = (lbl, count) => { const p = $('#bPhase'); if (p) p.textContent = lbl; const c = $('#bCount'); if (c) c.textContent = count; };
+  if (BREATHE.t === 0){
+    setPhaseUI(label, dur);
+    if (circle && !S.settings.reducedMotion){
+      circle.style.transition = 'transform '+dur+'s ease-in-out';
+      circle.style.transform = BREATHE.phase === 0 ? 'scale(1.18)' : BREATHE.phase === 2 ? 'scale(.72)' : circle.style.transform;
+    }
+  } else { setPhaseUI(label, dur - BREATHE.t); }
+  BREATHE.t++;
+  if (BREATHE.t > dur){
+    BREATHE.t = 0;
+    BREATHE.phase = (BREATHE.phase + 1) % 3;
+    if (BREATHE.phase === 0){ BREATHE.cycles++; const c = $('#bCycles'); if (c) c.textContent = 'Cycle ' + (BREATHE.cycles + 1); }
+  }
+  BREATHE.timer = setTimeout(breatheTick, 1000);
+}
+function closeBreathe(){
+  if (BREATHE){ BREATHE.running = false; clearTimeout(BREATHE.timer); if (BREATHE.cycles > 0){ addXP(5 + BREATHE.cycles*3, 'breathing'); toast('Beautiful. '+(BREATHE.cycles)+' cycle'+(BREATHE.cycles>1?'s':'')+' of calm banked. 💜','success'); } }
+  BREATHE = null;
+  $('#breatheRoot').innerHTML = '';
+  document.body.style.overflow = '';
+}
+
+/* ================= FOCUS MODE ================= */
+const FOCUS_MODES = { deep:{ label:'Deep Focus', mins:25, xp:50 }, sprint:{ label:'Quick Sprint', mins:10, xp:20 } };
+let TIMER = { mode:'deep', total:25*60, left:25*60, running:false, interval:null };
+let SOUND = { current:'silence', ctx:null, master:null, stopFns:[] };
+
+function renderFocus(){
+  const totalMin = FOCUS_MODES[TIMER.mode].mins;
+  $('#page-focus').innerHTML =
+    '<div class="grid g23">'+
+      '<div class="card timer-box">'+
+        '<div class="seg" role="tablist">'+
+          Object.entries(FOCUS_MODES).map(([k,m]) => '<button role="tab" class="'+(TIMER.mode===k?'on':'')+'" data-action="focusMode" data-mode="'+k+'">'+m.label+'</button>').join('')+
+        '</div>'+
+        '<div class="timer-ring">'+
+          (()=>{ const size=264, r=118, c=2*Math.PI*r;
+            return '<svg width="'+size+'" height="'+size+'" viewBox="0 0 '+size+' '+size+'">'+
+            '<defs><linearGradient id="tg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8b5cf6"/><stop offset="1" stop-color="#6366f1"/></linearGradient></defs>'+
+            '<circle cx="132" cy="132" r="'+r+'" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="13"/>'+
+            '<circle id="fRing" cx="132" cy="132" r="'+r+'" fill="none" stroke="url(#tg)" stroke-width="13" stroke-linecap="round" stroke-dasharray="'+c.toFixed(1)+'" stroke-dashoffset="0"/></svg>'; })()+
+          '<div class="timer-text"><div><div class="t-time" id="fTime">'+pad(Math.floor(TIMER.left/60))+':'+pad(TIMER.left%60)+'</div><div class="t-state" id="fState">'+(TIMER.running?'FOCUS':'READY')+'</div></div></div>'+
+        '</div>'+
+        '<div class="row" style="justify-content:center">'+
+          '<button class="btn btn-primary" id="fToggle" data-action="focusToggle">'+(TIMER.running?I.pause+' Pause':I.play+' Start')+'</button>'+
+          '<button class="btn btn-ghost" data-action="focusReset">'+I.reset+' Reset</button>'+
+        '</div>'+
+        '<p class="tiny muted">Finish a session to earn XP · a 5-min break is recommended between sessions</p>'+
+      '</div>'+
+      '<div class="stack" style="gap:16px">'+
+        '<div class="card">'+
+          '<div class="card-title">🌧️ Ambient Soundscape</div>'+
+          '<p class="card-sub">Generated live — no downloads</p>'+
+          '<div class="sound-grid" id="soundGrid">'+
+            [['rain','🌧️ Rain'],['ocean','🌊 Ocean'],['lofi','🎧 Lo-fi'],['forest','🌲 Forest'],['silence','🔇 Silence']].map(s =>
+              '<button class="sound-chip'+(SOUND.current===s[0]?' on':'')+'" data-action="setSound" data-sound="'+s[0]+'">'+s[1]+'</button>').join('')+
+          '</div>'+
+          '<div class="row mt"><span class="small muted">Volume</span><input type="range" min="0" max="100" value="65" data-input="volume" style="flex:1"></div>'+
+        '</div>'+
+        '<div class="grid g3" style="gap:12px">'+
+          '<div class="card stat-card" style="padding:14px 8px"><div class="stat-num" style="font-size:1.4rem" id="stSessions">'+S.completedToday+'</div><div class="stat-label">Sessions Today</div></div>'+
+          '<div class="card stat-card" style="padding:14px 8px"><div class="stat-num" style="font-size:1.4rem">'+(S.focusMinutes[todayISO()]||0)+'m</div><div class="stat-label">Focused Minutes</div></div>'+
+          '<div class="card stat-card" style="padding:14px 8px"><div class="stat-num" style="font-size:1.4rem">'+FOCUS_MODES[TIMER.mode].xp+'</div><div class="stat-label">XP on Completion</div></div>'+
+        '</div>'+
+      '</div>'+
+    '</div>';
+  updateFocusRing();
+}
+function updateFocusRing(){
+  const ring = $('#fRing'); if (!ring) return;
+  const c = 2*Math.PI*118, frac = TIMER.left / TIMER.total;
+  ring.setAttribute('stroke-dashoffset', (c*(1-frac)).toFixed(1));
+  const t = $('#fTime'); if (t) t.textContent = pad(Math.floor(TIMER.left/60))+':'+pad(TIMER.left%60);
+  const mini = $('#miniTimer');
+  if (TIMER.running){ mini.hidden = false; mini.innerHTML = I.clockMini + ' <span>' + pad(Math.floor(TIMER.left/60))+':'+pad(TIMER.left%60) + '</span>'; }
+  else mini.hidden = true;
+}
+function focusTick(){
+  TIMER.left--;
+  if (TIMER.left <= 0){
+    TIMER.left = 0; TIMER.running = false; clearInterval(TIMER.interval); TIMER.interval = null;
+    finishFocusSession();
+  }
+  updateFocusRing();
+  const st = $('#fState'); if (st) st.textContent = TIMER.running ? 'FOCUS' : (TIMER.left < TIMER.total ? 'PAUSED' : 'READY');
+  const tg = $('#fToggle'); if (tg && !TIMER.running && TIMER.left === 0) { tg.innerHTML = I.play+' Start'; }
+}
+function focusToggle(){
+  if (TIMER.left === 0){ TIMER.left = TIMER.total; }
+  if (TIMER.running){
+    TIMER.running = false; clearInterval(TIMER.interval); TIMER.interval = null;
+    const tg = $('#fToggle'); if (tg) tg.innerHTML = I.play+' Start';
+    const st = $('#fState'); if (st) st.textContent = 'PAUSED';
+  } else {
+    TIMER.running = true;
+    TIMER.interval = setInterval(focusTick, 1000);
+    const tg = $('#fToggle'); if (tg) tg.innerHTML = I.pause+' Pause';
+    const st = $('#fState'); if (st) st.textContent = 'FOCUS';
+    if (SOUND.current !== 'silence') playSound(SOUND.current);
+  }
+  updateFocusRing();
+}
+function focusReset(){
+  TIMER.running = false; clearInterval(TIMER.interval); TIMER.interval = null;
+  TIMER.left = TIMER.total;
+  const tg = $('#fToggle'); if (tg) tg.innerHTML = I.play+' Start';
+  const st = $('#fState'); if (st) st.textContent = 'READY';
+  updateFocusRing();
+  stopSound();
+}
+function focusSetMode(mode){
+  TIMER.mode = mode; TIMER.total = FOCUS_MODES[mode].mins*60; TIMER.left = TIMER.total;
+  TIMER.running = false; clearInterval(TIMER.interval); TIMER.interval = null;
+  renderFocus();
+}
+function finishFocusSession(){
+  stopSound();
+  const m = FOCUS_MODES[TIMER.mode];
+  S.completedToday++;
+  S.focusMinutes[todayISO()] = (S.focusMinutes[todayISO()]||0) + m.mins;
+  addXP(m.xp, m.label + ' complete');
+  S.brainScore += 2;
+  save(); chime(); confetti();
+  toast('Session complete! 🎉 Take a 5-minute break — stretch, water, look far away.', 'success', 5200);
+  TIMER.left = TIMER.total;
+  refreshHUD();
+  if (currentPage === 'focus') renderFocus();
+}
+function chime(){
+  try {
+    const ctx = audioCtx();
+    [523.25, 783.99].forEach((f, i) => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = 'sine'; o.frequency.value = f;
+      g.gain.setValueAtTime(0.0001, ctx.currentTime + i*0.18);
+      g.gain.exponentialRampToValueAtTime(0.22, ctx.currentTime + i*0.18 + 0.03);
+      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + i*0.18 + 0.9);
+      o.connect(g); g.connect(ctx.destination);
+      o.start(ctx.currentTime + i*0.18); o.stop(ctx.currentTime + i*0.18 + 1);
+    });
+  } catch(e){}
+}
+/* ---- WebAudio soundscapes ---- */
+function audioCtx(){
+  if (!SOUND.ctx) SOUND.ctx = new (window.AudioContext || window.webkitAudioContext)();
+  if (SOUND.ctx.state === 'suspended') SOUND.ctx.resume();
+  if (!SOUND.master){ SOUND.master = SOUND.ctx.createGain(); SOUND.master.gain.value = 0.65; SOUND.master.connect(SOUND.ctx.destination); }
+  return SOUND.ctx;
+}
+function noiseBuffer(ctx, seconds=2, type='white'){
+  const len = ctx.sampleRate * seconds;
+  const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+  const d = buf.getChannelData(0);
+  if (type === 'brown'){ let last = 0; for (let i=0;i<len;i++){ const w = Math.random()*2-1; last = (last + 0.02*w)/1.02; d[i] = last*3.5; } }
+  else { for (let i=0;i<len;i++) d[i] = Math.random()*2-1; }
+  return buf;
+}
+function stopSound(){
+  SOUND.stopFns.forEach(fn => { try { fn(); } catch(e){} });
+  SOUND.stopFns = [];
+  SOUND.current = 'silence';
+  $$('#soundGrid .sound-chip').forEach(c => c.classList.toggle('on', c.dataset.sound === 'silence'));
+}
+function playSound(name){
+  stopSound();
+  SOUND.current = name;
+  $$('#soundGrid .sound-chip').forEach(c => c.classList.toggle('on', c.dataset.sound === name));
+  if (name === 'silence') return;
+  try {
+    const ctx = audioCtx();
+    const src = ctx.createBufferSource();
+    src.buffer = noiseBuffer(ctx, 3, name==='ocean' ? 'brown' : 'white');
+    src.loop = true;
+    const filter = ctx.createBiquadFilter();
+    const gain = ctx.createGain();
+    if (name === 'rain'){ filter.type='lowpass'; filter.frequency.value=1400; gain.gain.value=0.16; }
+    if (name === 'ocean'){ filter.type='lowpass'; filter.frequency.value=520; gain.gain.value=0.0;
+      const lfo = ctx.createOscillator(), lg = ctx.createGain();
+      lfo.frequency.value=0.09; lg.gain.value=0.11;
+      lfo.connect(lg); lg.connect(gain.gain); gain.gain.value=0.12; lfo.start();
+      SOUND.stopFns.push(()=>{ lfo.stop(); });
+    }
+    if (name === 'forest'){ filter.type='lowpass'; filter.frequency.value=800; gain.gain.value=0.035; }
+    src.connect(filter); filter.connect(gain); gain.connect(SOUND.master);
+    src.start();
+    SOUND.stopFns.push(()=>{ try{ src.stop(); }catch(e){} });
+    if (name === 'forest'){
+      const chirp = () => {
+        if (SOUND.current !== 'forest') return;
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.type='sine';
+        const base = 2200 + Math.random()*1600;
+        o.frequency.setValueAtTime(base, ctx.currentTime);
+        o.frequency.exponentialRampToValueAtTime(base*1.4, ctx.currentTime+0.09);
+        o.frequency.exponentialRampToValueAtTime(base*0.9, ctx.currentTime+0.18);
+        g.gain.setValueAtTime(0.0001, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.05, ctx.currentTime+0.03);
+        g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime+0.22);
+        o.connect(g); g.connect(SOUND.master);
+        o.start(); o.stop(ctx.currentTime+0.25);
+      };
+      const iv = setInterval(()=>{ if (SOUND.current==='forest') { chirp(); setTimeout(chirp, 180); } }, 4200);
+      SOUND.stopFns.push(()=> clearInterval(iv));
+    }
+    if (name === 'lofi'){
+      const chords = [[220,261.63,329.63,392],[174.61,220,261.63,329.63],[196,246.94,293.66,349.23],[164.81,196,246.94,293.66]];
+      let idx = 0;
+      const playChord = () => {
+        if (SOUND.current !== 'lofi') return;
+        const freqs = chords[idx % chords.length]; idx++;
+        freqs.forEach(f => {
+          const o = ctx.createOscillator(), g = ctx.createGain(), flt = ctx.createBiquadFilter();
+          o.type='triangle'; o.frequency.value=f;
+          flt.type='lowpass'; flt.frequency.value=700;
+          g.gain.setValueAtTime(0.0001, ctx.currentTime);
+          g.gain.linearRampToValueAtTime(0.028, ctx.currentTime+0.6);
+          g.gain.linearRampToValueAtTime(0.0001, ctx.currentTime+3.8);
+          o.connect(flt); flt.connect(g); g.connect(SOUND.master);
+          o.start(); o.stop(ctx.currentTime+4);
+        });
+      };
+      playChord();
+      const iv = setInterval(playChord, 4000);
+      SOUND.stopFns.push(()=> clearInterval(iv));
+    }
+  } catch(e){ toast('Audio not available in this preview — try the downloaded file.', 'warn'); }
+}
+
+/* ================= COGNITIVE LAB ================= */
+const GAMES = [
+  { id:'memory', name:'Memory Matrix', desc:'Remember and replicate patterns', icon:'grid' },
+  { id:'focusG', name:'Focus Trainer', desc:'Track moving objects accurately', icon:'target' },
+  { id:'logic', name:'Logic Chains', desc:'Solve sequential logic puzzles', icon:'chain' },
+  { id:'speed', name:'Speed Processing', desc:'Quick pattern recognition', icon:'zap' }
+];
+function speedUnlocked(){ return S.plan === 'pro' || S.xp >= 3000; }
+function renderCognitive(){
+  $('#page-cognitive').innerHTML =
+    '<div class="grid g3">'+
+      '<div class="card stat-card"><div class="stat-num" style="background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;">'+S.brainScore+'</div><div class="stat-label">Brain Score</div></div>'+
+      '<div class="card stat-card"><div class="stat-ico">🧩</div><div class="stat-num">'+S.exercisesDone+'</div><div class="stat-label">Exercises Done</div></div>'+
+      '<div class="card stat-card"><div class="stat-ico">📅</div><div class="stat-num">'+S.cogStreak+' <span class="small muted">days</span></div><div class="stat-label">Current Streak</div></div>'+
+    '</div>'+
+    '<div class="grid g2 mt">'+
+      GAMES.map(g => {
+        const locked = g.id==='speed' && !speedUnlocked();
+        const lvl = S.gameLevels[g.id==='focusG'?'focus':g.id], gxp = S.gameXP[g.id==='focusG'?'focus':g.id];
+        return '<div class="card game-card">'+
+          '<div class="spread"><div class="g-ico">'+I[g.icon]+'</div>'+
+            (locked ? '<span class="locked-ribbon">'+I.lock+' Locked — needs 3,000 XP or Pro</span>' : '<span class="badge badge-purple game-lvl">Level '+lvl+' · '+gxp+' XP</span>')+'</div>'+
+          '<div><b>'+g.name+'</b><div class="small muted">'+g.desc+'</div></div>'+
+          (locked
+            ? '<button class="btn btn-ghost" data-action="openPricing" style="opacity:.85">'+I.lock+' Unlock with Pro</button>'
+            : '<button class="btn btn-primary" data-action="openGame" data-game="'+g.id+'">'+I.play+' Start</button>')+
+        '</div>';
+      }).join('')+
+    '</div>'+
+    '<div class="card mt" style="border-style:dashed"><p class="small muted center">🧠 Brain Score grows with check-ins, focus sessions and games. Cognitive training works best in short, consistent bursts.</p></div>';
+}
+let GAME = null;
+function gameShell(title, sub, body){
+  openModal(
+    modalHead(title, sub)+
+    '<div id="gameArea">'+body+'</div>'+
+    '<div class="row mt" style="justify-content:space-between"><span class="small muted" id="gameMeta"></span><button class="btn btn-ghost btn-sm" data-action="closeGame">Exit</button></div>',
+    true
+  );
+}
+function closeGame(){
+  if (GAME && GAME.cleanup) GAME.cleanup();
+  GAME = null;
+  closeModal();
+  renderCognitive();
+}
+function gameMeta(txt){ const el = $('#gameMeta'); if (el) el.textContent = txt; }
+
+/* ---- Memory Matrix ---- */
+function openMemory(){
+  GAME = { type:'memory', level: S.gameLevels.memory, lives: 3, pattern: [], picked: [], lock: true };
+  gameShell('Memory Matrix','Watch the pattern, then replicate it — Level '+GAME.level);
+  mmRound();
+}
+function mmRound(){
+  if (!GAME || GAME.type !== 'memory') return;
+  const area = $('#gameArea'); if (!area) return;
+  const n = clamp(3 + Math.floor(GAME.level/2), 3, 6);
+  const tiles = clamp(GAME.level + 2, 4, 12);
+  GAME.pattern = Array.from({length:tiles}, () => Math.floor(Math.random()*n*n));
+  GAME.pattern = [...new Set(GAME.pattern)];
+  while (GAME.pattern.length < Math.min(tiles, n*n)) { const c = Math.floor(Math.random()*n*n); if (!GAME.pattern.includes(c)) GAME.pattern.push(c); }
+  GAME.picked = []; GAME.lock = true;
+  area.innerHTML = '<div class="mm-grid" style="grid-template-columns:repeat('+n+',1fr)">'+
+    Array.from({length:n*n}, (_,i) => '<button class="mm-tile" data-mm="'+i+'" aria-label="tile"></button>').join('')+'</div>';
+  gameMeta('Level '+GAME.level+' · '+GAME.pattern.length+' tiles · ❤️'.repeat(GAME.lives));
+  const flashMs = 650 + GAME.pattern.length*160;
+  GAME.pattern.forEach((p, i) => setTimeout(() => { if (!GAME || GAME.type!=='memory') return; const el = $('[data-mm="'+p+'"]'); if (el){ el.classList.add('lit'); } }, 320 + i*(flashMs/GAME.pattern.length)*0.7));
+  setTimeout(() => { if (!GAME || GAME.type!=='memory') return; $$('#gameArea .mm-tile').forEach(t => t.classList.remove('lit')); GAME.lock = false; }, 320 + flashMs + 260);
+}
+function mmClick(el){
+  if (!GAME || GAME.lock) return;
+  const idx = +el.dataset.mm;
+  if (GAME.picked.includes(idx)) return;
+  if (GAME.pattern.includes(idx)){
+    GAME.picked.push(idx); el.classList.add('ok');
+    if (GAME.picked.length === GAME.pattern.length){
+      GAME.lock = true;
+      const xp = GAME.level*20;
+      S.gameLevels.memory = ++GAME.level; S.gameXP.memory += xp;
+      S.brainScore += 12; S.exercisesDone++; addXP(xp, 'Memory Matrix level up'); save();
+      gameMeta('Perfect! Level '+(GAME.level-1)+' cleared · +'+xp+' XP');
+      confetti();
+      setTimeout(mmRound, 1100);
+    }
+  } else {
+    el.classList.add('bad'); GAME.lock = true; GAME.lives--;
+    if (GAME.lives <= 0){
+      S.exercisesDone++; save();
+      gameMeta('Out of lives — level '+GAME.level+' stays. So close!');
+      setTimeout(() => { if (GAME) closeGame(); }, 1600);
+    } else {
+      gameMeta('Miss! ❤️'.repeat(GAME.lives)+' — watch again…');
+      setTimeout(mmRound, 1100);
+    }
+  }
+}
+
+/* ---- Focus Trainer ---- */
+function openFocusGame(){
+  GAME = { type:'focusG', hits:0, misses:0, timeLeft:30, running:true };
+  gameShell('Focus Trainer','Tap the moving orb — 30 seconds, accuracy counts');
+  const area = $('#gameArea');
+  area.innerHTML = '<div class="ft-arena" id="ftArena"><div class="ft-target" id="ftTarget">'+I.target+'</div></div>'+
+    '<div class="spread mt"><span class="small" id="ftScore">Hits: 0 · Misses: 0</span><span class="small muted" id="ftTime">30.0s</span></div>';
+  const target = $('#ftTarget'), arenaEl = $('#ftArena');
+  const speedFor = () => Math.max(430, 900 - GAME.hits*22);
+  const move = () => {
+    const w = arenaEl.clientWidth - 46, h = arenaEl.clientHeight - 46;
+    const sp = speedFor();
+    target.style.transitionDuration = (sp/1000)+'s';
+    target.style.left = (Math.random()*w) + 'px';
+    target.style.top = (Math.random()*h) + 'px';
+  };
+  move();
+  const loop = () => { if (!GAME || GAME.type!=='focusG' || !GAME.running) return; move(); GAME.moveIv = setTimeout(loop, speedFor()); };
+  GAME.moveIv = setTimeout(loop, speedFor());
+  GAME.tickIv = setInterval(() => {
+    GAME.timeLeft -= 0.1;
+    const tEl = $('#ftTime'); if (tEl) tEl.textContent = GAME.timeLeft.toFixed(1)+'s';
+    if (GAME.timeLeft <= 0){ ftEnd(); }
+  }, 100);
+  GAME.cleanup = () => { clearInterval(GAME.tickIv); clearTimeout(GAME.moveIv); };
+}
+function ftEnd(){
+  if (!GAME) return;
+  GAME.running = false; clearInterval(GAME.tickIv); clearTimeout(GAME.moveIv);
+  const acc = GAME.hits + GAME.misses ? Math.round(GAME.hits/(GAME.hits+GAME.misses)*100) : 0;
+  const xp = GAME.hits*4;
+  const leveled = GAME.hits >= 12 + S.gameLevels.focus*2;
+  if (leveled) S.gameLevels.focus++;
+  S.gameXP.focus += xp; S.brainScore += Math.round(GAME.hits*0.8); S.exercisesDone++;
+  addXP(xp, 'Focus Trainer'); save();
+  const area = $('#gameArea');
+  if (area) area.innerHTML = '<div class="center stack" style="gap:10px;padding:20px 0">'+
+    '<div style="font-size:2.4rem">🎯</div><div class="stat-num">'+GAME.hits+' hits</div>'+
+    '<p class="muted small">Accuracy '+acc+'% · +'+xp+' XP'+(leveled?' · <b class="delta-up">Level up!</b>':'')+'</p>'+
+    '<div class="row" style="justify-content:center"><button class="btn btn-primary btn-sm" data-action="openGame" data-game="focusG">Play again</button></div></div>';
+  gameMeta('Session complete');
+  if (leveled) confetti();
+}
+
+/* ---- Logic Chains ---- */
+const LC_BANK = [
+  { seq:[2,4,8,16], ans:32, opts:[32,24,20,64], why:'Each number doubles the previous one.' },
+  { seq:[1,1,2,3,5], ans:8, opts:[8,7,6,10], why:'Fibonacci — each number is the sum of the two before it.' },
+  { seq:[3,5,9,17], ans:33, opts:[33,25,29,35], why:'Each number is double the previous, minus 1.' },
+  { seq:[1,4,9,16], ans:25, opts:[25,20,24,36], why:'Perfect squares: 1², 2², 3², 4², 5²…' },
+  { seq:[100,81,64,49], ans:36, opts:[36,42,25,48], why:'Squares counting down: 10², 9², 8², 7², 6².' },
+  { seq:[2,3,5,7,11], ans:13, opts:[13,12,14,15], why:'These are the prime numbers in order.' },
+  { seq:[5,10,9,18,17], ans:34, opts:[34,26,33,36], why:'Alternating ×2 and −1.' },
+  { seq:[64,32,16,8], ans:4, opts:[4,6,2,5], why:'Each number is half of the previous one.' },
+  { seq:[1,2,6,24], ans:120, opts:[120,48,100,96], why:'Multiply by 2, 3, 4, then 5.' },
+  { seq:[81,27,9,3], ans:1, opts:[1,0,2,6], why:'Each number is divided by 3.' },
+  { seq:[4,9,19,39], ans:79, opts:[79,78,59,69], why:'Each number is double the previous, plus 1.' },
+  { seq:[7,14,10,20], ans:16, opts:[16,14,24,30], why:'Alternating ×2 and −4.' }
+];
+function openLogic(){
+  GAME = { type:'logic', q:0, correct:0, order: [...LC_BANK].sort(()=>Math.random()-.5).slice(0,5) };
+  gameShell('Logic Chains','Find the next link in the chain — 5 puzzles');
+  lcDraw();
+}
+function lcDraw(){
+  const item = GAME.order[GAME.q];
+  gameMeta('Question '+(GAME.q+1)+' of '+GAME.order.length+' · ✅ '+GAME.correct);
+  $('#gameArea').innerHTML =
+    '<div class="lc-seq">'+item.seq.join(' &nbsp;·&nbsp; ')+' &nbsp;·&nbsp; <span style="color:var(--accent)">?</span></div>'+
+    '<div class="lc-opts mt">'+item.opts.map((o,i) => '<button class="lc-opt" data-lc="'+i+'">'+o+'</button>').join('')+'</div>'+
+    '<p class="small muted center mt" id="lcWhy" style="min-height:20px"></p>';
+}
+function lcAnswer(i){
+  const item = GAME.order[GAME.q];
+  const buttons = $$('#gameArea .lc-opt');
+  buttons.forEach(b => b.style.pointerEvents = 'none');
+  if (item.opts[i] === item.ans){
+    buttons[i].classList.add('right'); GAME.correct++;
+    $('#lcWhy').textContent = '✅ ' + item.why;
+  } else {
+    buttons[i].classList.add('wrong');
+    const right = buttons.findIndex(b => +b.textContent === item.ans || b.textContent === String(item.ans));
+    buttons.forEach((b, j) => { if (item.opts[j] === item.ans) b.classList.add('right'); });
+    $('#lcWhy').textContent = '❌ ' + item.why;
+  }
+  GAME.q++;
+  setTimeout(() => { if (GAME && GAME.type==='logic' && GAME.q < GAME.order.length) lcDraw(); else if (GAME && GAME.type==='logic') lcEnd(); }, 1500);
+}
+function lcEnd(){
+  const xp = GAME.correct*15;
+  const leveled = GAME.correct >= 4;
+  if (leveled) S.gameLevels.logic++;
+  S.gameXP.logic += xp; S.brainScore += GAME.correct*8; S.exercisesDone++;
+  addXP(xp, 'Logic Chains'); save();
+  $('#gameArea').innerHTML = '<div class="center stack" style="gap:10px;padding:20px 0">'+
+    '<div style="font-size:2.4rem">🧩</div><div class="stat-num">'+GAME.correct+'/'+GAME.order.length+' correct</div>'+
+    '<p class="muted small">+'+xp+' XP'+(leveled?' · <b class="delta-up">Level up!</b>':'')+'</p>'+
+    '<div class="row" style="justify-content:center"><button class="btn btn-primary btn-sm" data-action="openGame" data-game="logic">Play again</button></div></div>';
+  gameMeta('Round complete');
+  if (leveled) confetti();
+}
+
+/* ---- Speed Processing ---- */
+function openSpeed(){
+  if (!speedUnlocked()){ toast('Speed Processing unlocks at 3,000 XP — or with Pro.', 'warn'); return; }
+  GAME = { type:'speed', round:1, rounds:6, timeLeft:20, hits:0 };
+  gameShell('Speed Processing','Tap the tile with the different shade — 20 seconds, go!');
+  spRound();
+  GAME.tickIv = setInterval(() => {
+    if (!GAME) return;
+    GAME.timeLeft -= 0.1;
+    const tEl = $('#ftTime'); if (tEl) tEl.textContent = GAME.timeLeft.toFixed(1)+'s';
+    if (GAME.timeLeft <= 0) spEnd();
+  }, 100);
+  GAME.cleanup = () => clearInterval(GAME.tickIv);
+}
+function spRound(){
+  const n = clamp(2 + Math.floor(GAME.round/2), 2, 6);
+  const cells = n*n;
+  const odd = Math.floor(Math.random()*cells);
+  const hue = Math.floor(Math.random()*360);
+  const base = 'hsl('+hue+' 45% 58%)';
+  const near = 'hsl('+hue+' 45% '+(58 + (GAME.round%2? -9 : 9))+'%)';
+  $('#gameArea').innerHTML =
+    '<div class="sp-grid" style="grid-template-columns:repeat('+n+',1fr)">'+
+      Array.from({length:cells}, (_,i) => '<button class="sp-cell" data-sp="'+(i===odd?1:0)+'" style="background:'+(i===odd?near:base)+'" aria-label="tile"></button>').join('')+
+    '</div><div class="spread mt"><span class="small" id="ftScore">Found: '+GAME.hits+'</span><span class="small muted" id="ftTime">'+GAME.timeLeft.toFixed(1)+'s</span></div>';
+  gameMeta('Round '+GAME.round+' of '+GAME.rounds);
+}
+function spHit(isOdd, el){
+  if (!GAME) return;
+  if (isOdd){
+    GAME.hits++; GAME.round++;
+    chime();
+    if (GAME.round > GAME.rounds){ spEnd(); return; }
+    spRound();
+  } else {
+    GAME.timeLeft = Math.max(0.5, GAME.timeLeft - 1.5);
+    el.style.outline = '2px solid var(--bad)';
+    gameMeta('Wrong tile — −1.5s!');
+  }
+}
+function spEnd(){
+  if (!GAME) return;
+  clearInterval(GAME.tickIv);
+  const xp = GAME.hits*12;
+  S.gameXP.speed += xp; S.brainScore += GAME.hits*6; S.exercisesDone++;
+  addXP(xp, 'Speed Processing'); save();
+  $('#gameArea').innerHTML = '<div class="center stack" style="gap:10px;padding:20px 0">'+
+    '<div style="font-size:2.4rem">⚡</div><div class="stat-num">'+GAME.hits+' patterns</div>'+
+    '<p class="muted small">+'+xp+' XP</p>'+
+    '<div class="row" style="justify-content:center"><button class="btn btn-primary btn-sm" data-action="openGame" data-game="speed">Play again</button></div></div>';
+  gameMeta('Session complete');
+  confetti();
+}
+
+/* ================= THERAPY HUB ================= */
+const DOCS = [
+  { id:'priya', name:'Dr. Priya Sharma', cred:'Clinical Psychologist · PhD', spec:'Anxiety & Stress', rating:4.9, sessions:230, langs:'Hindi, English', fee:899, color:'#8b5cf6', avail:true },
+  { id:'rahul', name:'Dr. Rahul Mehta', cred:'Psychologist · M.Phil', spec:'ADHD & Focus', rating:4.8, sessions:185, langs:'English, Hinglish', fee:799, color:'#38bdf8', avail:true },
+  { id:'ananya', name:'Dr. Ananya Reddy', cred:'Psychiatrist · MD', spec:'Depression & Mood', rating:4.9, sessions:310, langs:'English', fee:999, color:'#f472b6', avail:false },
+  { id:'arjun', name:'Dr. Arjun Verma', cred:'Psychiatrist · DPM', spec:'Psychiatry & Sleep', rating:4.7, sessions:412, langs:'Hindi, English', fee:1299, color:'#34d399', avail:true },
+  { id:'sneha', name:'Dr. Sneha Kulkarni', cred:'Therapist · CBT', spec:'Burnout & Sleep', rating:4.8, sessions:156, langs:'English, Hindi, Marathi', fee:849, color:'#fbbf24', avail:true }
+];
+function docFee(d){ return S.plan==='pro' ? Math.round(d.fee*0.9) : d.fee; }
+function renderTherapy(){
+  const upcoming = S.bookings.filter(b => b.date >= todayISO()).sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
+  $('#page-therapy').innerHTML =
+    (upcoming.length ?
+      '<div class="card" style="border-color:rgba(139,92,246,.4);margin-bottom:16px"><div class="card-title">'+I.cal+' Your Sessions</div><div class="stack" style="gap:10px">'+
+      upcoming.map(b =>
+        '<div class="alert-item" style="align-items:center"><span class="a-dot" style="background:var(--accent)"></span>'+
+        '<div style="flex:1"><b>'+esc(b.doc)+'</b> · '+b.mode+'<div class="small muted">'+niceDate(b.date)+' ('+dayName(b.date)+') · '+b.time+' · '+INR(b.fee)+' · Ref '+b.ref+'</div></div>'+
+        '<button class="btn btn-danger btn-sm" data-action="cancelBooking" data-ref="'+b.ref+'">Cancel</button></div>').join('')+
+      '</div></div>' : '')+
+    '<div class="grid g2">'+
+      DOCS.map(d => {
+        const initials = d.name.replace('Dr. ','').split(' ').map(w=>w[0]).join('');
+        return '<div class="card doc-card">'+
+          '<div class="doc-head"><div class="doc-ava" style="background:linear-gradient(135deg,'+d.color+','+d.color+'99)">'+initials+'</div>'+
+          '<div style="flex:1;min-width:0"><div class="doc-name">'+d.name+'</div><div class="doc-cred">'+d.cred+'</div></div>'+
+          '<span class="badge '+(d.avail?'badge-green':'badge-amber')+'">'+(d.avail?'<span class="dot dot-green" style="margin-right:5px"></span>Available':'Busy')+'</span></div>'+
+          '<div class="doc-meta">'+
+            '<span class="chip">'+esc(d.spec)+'</span>'+
+            '<span class="chip star">'+I.star+' '+d.rating+'</span>'+
+            '<span class="chip">'+d.sessions+' sessions</span>'+
+            '<span class="chip">🗣️ '+esc(d.langs)+'</span>'+
+          '</div>'+
+          '<div class="spread">'+
+            '<div class="fee">'+(S.plan==='pro'?'<span class="fee-old">'+INR(d.fee)+'</span>':'')+INR(docFee(d))+' <span class="small muted">/ session</span></div>'+
+            (d.avail
+              ? '<button class="btn btn-primary btn-sm" data-action="openBooking" data-doc="'+d.id+'">Book Session</button>'
+              : '<button class="btn btn-ghost btn-sm" data-action="waitlist" data-doc="'+d.id+'">Join Waitlist</button>')+
+          '</div>'+
+        '</div>';
+      }).join('')+
+    '</div>'+
+    '<div class="card mt" style="border-style:dashed"><p class="small muted center">🔒 Demo app — bookings are simulated and stored only on your device. In a production build this connects to a real scheduling & payment system (e.g. Razorpay + Zoom).</p></div>';
+}
+let BOOKING = null;
+function openBooking(docId){
+  const d = DOCS.find(x => x.id === docId);
+  const dates = Array.from({length:7}, (_,i) => addDaysISO(todayISO(), i+1));
+  const times = ['10:00 AM','11:30 AM','1:00 PM','2:30 PM','4:00 PM','5:30 PM','7:00 PM'];
+  BOOKING = { doc:d, date:null, time:null, mode:'Video' };
+  openModal(
+    modalHead(d.name, d.cred+' · '+d.spec)+
+    '<label class="fld">Pick a date</label>'+
+    '<div class="slot-chips" id="bk-dates">'+dates.map(dt => '<button class="chip" data-bk-date="'+dt+'">'+dayName(dt)+'<br><span class="tiny muted">'+niceDate(dt)+'</span></button>').join('')+'</div>'+
+    '<div class="mt"></div><label class="fld">Pick a time</label>'+
+    '<div class="slot-chips" id="bk-times">'+times.map(tm => '<button class="chip" data-bk-time="'+tm+'">'+tm+'</button>').join('')+'</div>'+
+    '<div class="mt"></div><label class="fld">Session mode</label>'+
+    '<div class="seg" id="bk-modes">'+['Video','Audio','Chat'].map((m,i) => '<button class="'+(i===0?'on':'')+'" data-bk-mode="'+m+'">'+(m==='Video'?I.video:m==='Audio'?I.mic:I.chat)+' '+m+'</button>').join('')+'</div>'+
+    '<div class="mt"></div><label class="fld">What would you like to focus on? (optional)</label>'+
+    '<textarea id="bk-note" rows="2" placeholder="e.g. Work stress, sleep issues..."></textarea>'+
+    '<div class="spread mt"><div class="fee">'+(S.plan==='pro'?'<span class="fee-old">'+INR(d.fee)+'</span>':'')+INR(docFee(d))+' <span class="small muted">/ '+BOOKING.mode.toLowerCase()+' session</span></div>'+
+    '<button class="btn btn-primary" data-action="confirmBooking">'+I.check+' Confirm Booking</button></div>'+
+    '<p class="tiny muted mt">Demo booking — no payment will be taken.</p>'
+  );
+}
+function bookingValid(){
+  if (!BOOKING.date){ toast('Pick a date first.', 'warn'); return false; }
+  if (!BOOKING.time){ toast('Pick a time slot.', 'warn'); return false; }
+  return true;
+}
+function confirmBooking(){
+  if (!bookingValid()) return;
+  const b = { id: BOOKING.doc.id, doc: BOOKING.doc.name, date: BOOKING.date, time: BOOKING.time, mode: BOOKING.mode, fee: docFee(BOOKING.doc), note: $('#bk-note').value.trim(), ref: 'NN-'+uid().slice(0,4) };
+  S.bookings.push(b); save();
+  chime(); confetti();
+  openModal(
+    '<div class="center stack" style="gap:10px;padding:14px 0">'+
+    '<div style="width:64px;height:64px;border-radius:99px;background:rgba(52,211,153,.15);display:grid;place-items:center;margin:0 auto"><span style="color:var(--good);display:inline-grid">'+I.check.replace('<svg','<svg width="30" height="30"')+'</span></div>'+
+    '<h3>Session booked!</h3>'+
+    '<p class="muted small">'+b.doc+' · '+niceDate(b.date)+' ('+dayName(b.date)+') · '+b.time+' · '+b.mode+'<br>Ref <b>'+b.ref+'</b> · '+INR(b.fee)+' (demo — no charge)</p>'+
+    '<p class="tiny muted">A confirmation would normally reach you on email/WhatsApp. You can cancel anytime from the Therapy Hub.</p>'+
+    '<div class="row mt" style="justify-content:center;gap:10px"><button class="btn btn-ghost" data-action="closeModal">Done</button><button class="btn btn-primary" data-action="go" data-page="therapy">View my sessions</button></div>'+
+    '</div>'
+  );
+  toast('Session with '+b.doc+' booked for '+niceDate(b.date)+'. ✅', 'success', 5000);
+  renderTherapy();
+}
+function cancelBooking(ref){
+  S.bookings = S.bookings.filter(b => b.ref !== ref); save();
+  toast('Session cancelled.', 'info');
+  renderTherapy();
+}
+
+/* ================= PREVENTIVE AI ================= */
+function buildAlerts(M){
+  const alerts = [];
+  const week = lastNDaysMood(7);
+  const recent = week.slice(-3);
+  if (recent.length === 3 && avg(recent.map(m=>m.stress)) > avg(week.map(m=>m.stress)) + 0.4)
+    alerts.push({ sev:'red', time:'today', title:'Elevated Stress Pattern', body:'Your stress markers have been above baseline for 3 consecutive days. Consider a recovery day — your future self will thank you.' });
+  const sleepPrev = avg(week.slice(0,3).map(m=>m.sleep));
+  if (sleepPrev && M.sleepAvg < sleepPrev - 0.6)
+    alerts.push({ sev:'amber', time:'yesterday', title:'Sleep Quality Declining', body:'Average sleep dropped '+Math.round((sleepPrev-M.sleepAvg)/sleepPrev*100)+'% this week. Reducing screen time before bed may help.' });
+  const yst = S.focusMinutes[addDaysISO(todayISO(),-1)] || 0;
+  if (yst > 60 && M.recovery >= 55)
+    alerts.push({ sev:'green', time:'yesterday', title:'Recovery Trend Positive', body:'Your recovery metrics are improving after yesterday\u2019s focus sessions. Whatever you changed — keep it.' });
+  if (!todayLog())
+    alerts.push({ sev:'amber', time:'today', title:'Check-in Reminder', body:'You haven\u2019t logged today\u2019s check-in yet. 20 seconds now makes your weekly insights much sharper.' });
+  if (M.sleepDebt >= 5)
+    alerts.push({ sev:'amber', time:'this week', title:'Sleep Debt Building', body:'You\u2019ve accumulated '+M.sleepDebt+'h of sleep debt this week. A consistent bedtime repays it faster than sleeping in.' });
+  if (alerts.length < 2)
+    alerts.push({ sev:'green', time:'this week', title:'Steady State', body:'No warning signs detected. Your mood and stress are holding stable — keep the check-ins going.' });
+  return alerts;
+}
+function renderPreventive(){
+  const M = metrics();
+  const alerts = buildAlerts(M);
+  const gauges = [
+    { title:'Burnout Risk', val:M.burnout, suffix:'%', status:lvl(M.burnout,33,66,true), color:statusColor(M.burnout,33,66,true) },
+    { title:'Stress Level', val:M.stressPct, suffix:'%', status:lvl(M.stressPct,33,66,true), color:statusColor(M.stressPct,33,66,true) },
+    { title:'Sleep Debt', val:M.sleepDebt, suffix:' hrs', status:M.sleepDebt<3?'Good':M.sleepDebt<6?'Watch':'High', color:M.sleepDebt<3?'var(--good)':M.sleepDebt<6?'var(--warn)':'var(--bad)' },
+    { title:'Recovery Score', val:M.recovery, suffix:'%', status:lvl(M.recovery,40,66), color:statusColor(M.recovery,40,66) }
+  ];
+  const rec = alerts.find(a => a.sev !== 'green') || alerts[0];
+  $('#page-preventive').innerHTML =
+    '<div class="grid g4">'+
+      gauges.map(g => '<div class="card gauge-card">'+
+        ringSVG(g.val, 118, 11, g.color, '<div class="stat-num" style="font-size:1.5rem">'+g.val+g.suffix+'</div>')+
+        '<div class="g-title">'+g.title+'</div><div class="g-status" style="color:'+g.color+'">'+g.status.toUpperCase()+'</div></div>').join('')+
+    '</div>'+
+    '<div class="grid g23 mt">'+
+      '<div class="card"><div class="card-title">'+I.shield+' AI Health Alerts</div><p class="card-sub">Early warnings from your mood, sleep & focus data</p>'+
+        '<div class="stack">'+alerts.map(a =>
+          '<div class="alert-item"><span class="a-dot" style="background:'+(a.sev==='red'?'var(--bad)':a.sev==='amber'?'var(--warn)':'var(--good)')+'"></span>'+
+          '<div style="flex:1"><b>'+a.title+'</b> <span class="tiny muted">· '+a.time+'</span><div class="small muted" style="margin-top:2px">'+a.body+'</div></div></div>').join('')+
+        '</div></div>'+
+      '<div class="stack" style="gap:16px">'+
+        '<div class="card" style="border-color:rgba(139,92,246,.4)"><div class="card-title">'+I.spark+' This Week\u2019s Recommendation</div>'+
+          '<p class="small" style="margin-top:6px">'+(rec.sev==='green' ? 'Keep doing what you\u2019re doing — your metrics are in a healthy range. Consistency &gt; intensity.' :
+            rec.title.includes('Sleep') ? 'Protect your evenings: screens off 45 minutes before bed, cool dark room, same wake time. Aim for 7.5–8h tonight.' :
+            rec.title.includes('Stress') || rec.title.includes('Check') ? 'Schedule micro-recovery today: one breathing cycle every 2 hours, a 15-minute walk after lunch, and one thing you genuinely enjoy.' :
+            'Your body is asking for recovery. Take today easy — light movement, good food, early night. Rest is when adaptation happens.')+'</p></div>'+
+        '<div class="card"><div class="card-title">📐 How these are calculated</div><p class="tiny muted" style="margin-top:6px">'+
+          'Burnout risk blends stress check-ins (45%), sleep deficit (30%) and focus overload (25%). Recovery blends mood (45%), sleep (35%) and low stress (20%). '+
+          'All from your last 7 days of check-ins and sessions — stored only on your device.</p></div>'+
+      '</div>'+
+    '</div>';
+}
+
+/* ================= NEURODIVERSE MODE ================= */
+const ND = [
+  { key:'reducedMotion', emoji:'🦋', title:'Reduced Motion', desc:'Minimize animations and transitions' },
+  { key:'highContrast',  emoji:'🌗', title:'High Contrast',  desc:'Increase contrast for better readability' },
+  { key:'screenReader',  emoji:'🔊', title:'Screen Reader',  desc:'Optimized for screen readers (live announcements)' },
+  { key:'colorBlind',    emoji:'🎨', title:'Color Blind Mode', desc:'Adjusted color palette for accessibility' },
+  { key:'largeText',     emoji:'🔍', title:'Large Text',      desc:'Bigger type across the whole app' }
+];
+function renderNeurodiverse(){
+  $('#page-neurodiverse').innerHTML =
+    '<div class="stack" style="gap:12px">'+
+      ND.map(n =>
+        '<div class="toggle-row"><div class="t-ico">'+n.emoji+'</div>'+
+        '<div><div class="t-title">'+n.title+'</div><div class="t-desc">'+n.desc+'</div></div>'+
+        '<label class="switch"><input type="checkbox" data-input="ndToggle" data-key="'+n.key+'" '+(S.settings[n.key]?'checked':'')+' aria-label="'+n.title+'"><span class="sl"></span></label></div>').join('')+
+    '</div>'+
+    '<div class="card mt" style="border-style:dashed"><p class="small muted center">✨ Changes apply instantly across the app and are saved to your profile.</p></div>';
+}
+
+/* ================= SETTINGS ================= */
+const PERSONAS = [
+  { id:'compassionate', emoji:'💚', name:'Compassionate', desc:'Warm, patient, validating' },
+  { id:'coach', emoji:'💪', name:'Coach', desc:'Energetic, action-first' },
+  { id:'analytical', emoji:'📊', name:'Analytical', desc:'Data-driven, structured' },
+  { id:'playful', emoji:'✨', name:'Playful', desc:'Light, fun, encouraging' }
+];
+function renderSettings(){
+  const p = S.profile;
+  $('#page-settings').innerHTML =
+    '<div class="grid g2">'+
+      '<div class="card"><div class="card-title">'+I.user+' Profile</div>'+
+        '<div class="form-grid mt">'+
+          '<div class="field"><label class="fld" for="stName">Full Name</label><input class="txt" id="stName" value="'+esc(p.name)+'"></div>'+
+          '<div class="field"><label class="fld" for="stEmail">Email</label><input class="txt" id="stEmail" type="email" value="'+esc(p.email)+'"></div>'+
+          '<div class="field"><label class="fld" for="stOcc">Occupation</label><input class="txt" id="stOcc" value="'+esc(p.occupation)+'"></div>'+
+          '<div class="field"><label class="fld" for="stGoal">Goal</label>'+
+            '<div class="select-wrap"><select class="txt" id="stGoal">'+
+            ['Improve Focus & Productivity','Reduce Stress & Anxiety','Better Sleep','Manage Mood','Personal Growth'].map(g=>'<option '+(p.goal===g?'selected':'')+'>'+g+'</option>').join('')+
+            '</select></div></div>'+
+        '</div>'+
+        '<div class="row mt" style="justify-content:flex-end"><button class="btn btn-primary" data-action="saveProfile">'+I.check+' '+t('save')+'</button></div>'+
+      '</div>'+
+      '<div class="stack" style="gap:16px">'+
+        '<div class="card"><div class="card-title">'+I.lang+' Language</div>'+
+          '<div class="select-wrap mt"><select class="txt" data-input="setLanguage">'+
+            '<option value="en" '+(S.settings.language==='en'?'selected':'')+'>English</option>'+
+            '<option value="hi" '+(S.settings.language==='hi'?'selected':'')+'>हिन्दी (Hindi)</option>'+
+            '<option value="hinglish" '+(S.settings.language==='hinglish'?'selected':'')+'>Hinglish</option>'+
+          '</select></div>'+
+          '<p class="tiny muted mt">Interface language (AI chat currently speaks English).</p></div>'+
+        '<div class="card"><div class="card-title">'+I.bot+' AI Personality</div>'+
+          '<div class="persona-grid mt">'+
+            PERSONAS.map(x => '<button class="persona'+(S.settings.personality===x.id?' on':'')+'" data-action="setPersona" data-p="'+x.id+'"><div class="p-emoji">'+x.emoji+'</div><div class="p-name">'+x.name+'</div><div class="p-desc">'+x.desc+'</div></button>').join('')+
+          '</div></div>'+
+      '</div>'+
+    '</div>'+
+    '<div class="grid g2 mt">'+
+      '<div class="card"><div class="card-title">'+I.spark+' Plan</div>'+
+        '<div class="spread mt"><div><b>'+(S.plan==='pro'?'Pro':'Free')+'</b><div class="small muted">'+(S.plan==='pro'?'Unlimited AI, all games, therapy discounts':'10 AI messages/day · basic features')+'</div></div>'+
+        '<button class="btn '+(S.plan==='pro'?'btn-ghost':'btn-primary')+' btn-sm" data-action="openPricing">'+(S.plan==='pro'?'Manage plan':'Upgrade')+'</button></div></div>'+
+      '<div class="card"><div class="card-title">🔒 Data & Privacy</div>'+
+        '<p class="small muted mt">Everything — mood logs, chats, bookings — stays in this browser. Nothing is uploaded anywhere.</p>'+
+        '<div class="row mt" style="justify-content:flex-end"><button class="btn btn-danger btn-sm" data-action="resetData">Reset demo data</button></div></div>'+
+    '</div>'+
+    '<div class="card mt" style="border-style:dashed"><p class="tiny muted center">Neuro Nest v1.0 · Mind Operating System · Demo build — not a medical device. For emergencies call 112 or Tele-MANAS 14416.</p></div>';
+}
+function saveProfile(){
+  S.profile.name = $('#stName').value.trim() || 'Friend';
+  S.profile.email = $('#stEmail').value.trim();
+  S.profile.occupation = $('#stOcc').value.trim();
+  S.profile.goal = $('#stGoal').value;
+  save(); refreshHUD();
+  toast('Profile saved. Looking good, '+S.profile.name.split(' ')[0]+'! ✨', 'success');
+  renderSettings();
+}
+function resetData(){
+  storage.clear();
+  S = defaultState(); save();
+  toast('Demo data reset.', 'info');
+  applyA11y(); buildSidebar(); refreshHUD(); go('dashboard');
+}
+
+/* ================= PRICING ================= */
+let PLAN_CYCLE = 'monthly';
+const FREE_FEATS = ['Basic AI Chat (10 msgs/day)','Limited Analytics','Basic Focus Mode','1 Cognitive Exercise'];
+const PRO_FEATS = ['Unlimited AI Mind Coach','Advanced Analytics & Insights','Unlimited Focus Sessions','Full Cognitive Lab Access','Therapy Hub Discounts','Priority AI Responses','Neurodiverse Tools','Decision Engine Access'];
+function openPricing(){
+  const cycleNote = PLAN_CYCLE==='monthly' ? '₹299 <span class="per">/month</span>' : '₹2,083 <span class="per">/month · billed ₹2,499/year</span>';
+  openModal(
+    modalHead('Upgrade Your Mind','Choose your plan — unlock the full Neuro Nest experience')+
+    '<div class="row" style="justify-content:center"><div class="seg" id="planCycle">'+
+      '<button class="'+(PLAN_CYCLE==='monthly'?'on':'')+'" data-action="planCycle" data-c="monthly">Monthly</button>'+
+      '<button class="'+(PLAN_CYCLE==='yearly'?'on':'')+'" data-action="planCycle" data-c="yearly">Yearly <span class="tiny" style="color:var(--good)">save 30%</span></button>'+
+    '</div></div>'+
+    '<div class="grid g2 mt" style="gap:14px">'+
+      '<div class="plan-card"><div class="p-name">Free</div>'+
+        '<div class="plan-price"><span class="amt">₹0</span><span class="per">/month</span></div>'+
+        (S.plan==='free'?'<span class="badge badge-purple">CURRENT PLAN</span>':'')+
+        '<div class="stack" style="gap:8px">'+FREE_FEATS.map(f=>'<div class="feat no">'+I.check.replace('currentColor','#6d6a8a')+esc(f)+'</div>').join('')+'</div>'+
+        (S.plan==='free'?'<button class="btn btn-ghost btn-block" disabled>Current plan</button>':'<button class="btn btn-ghost btn-block" data-action="downgrade">Switch to Free</button>')+
+      '</div>'+
+      '<div class="plan-card pro">'+
+        '<span class="rec-badge badge badge-grad">RECOMMENDED</span>'+
+        '<div class="p-name">Pro</div>'+
+        '<div class="plan-price"><span class="amt">'+(PLAN_CYCLE==='monthly'?'₹299':'₹2,499')+'</span><span class="per">'+(PLAN_CYCLE==='monthly'?'/month':'/year · save 30%')+'</span></div>'+
+        '<div class="stack" style="gap:8px">'+PRO_FEATS.map(f=>'<div class="feat">'+I.check+esc(f)+'</div>').join('')+'</div>'+
+        (S.plan==='pro'
+          ? '<button class="btn btn-ghost btn-block" disabled>Pro is active ✦</button>'
+          : '<button class="btn btn-primary btn-block" data-action="upgrade">'+I.spark+' Upgrade to Pro</button>')+
+      '</div>'+
+    '</div>'+
+    '<p class="tiny muted mt center">Demo checkout — no payment is processed. (Wire Razorpay/Stripe here in production.)</p>'
+  );
+}
+function upgrade(){
+  S.plan = 'pro'; save(); refreshHUD();
+  closeModal(); confetti(); chime();
+  toast('Welcome to Pro! ✦ Unlimited AI, all games unlocked, 10% off therapy.', 'success', 5000);
+  if (currentPage==='cognitive') renderCognitive();
+  if (currentPage==='therapy') renderTherapy();
+}
+function downgrade(){ S.plan = 'free'; save(); refreshHUD(); openPricing(); toast('Switched back to Free plan.', 'info'); }
+
+/* ================= EVENTS / INIT ================= */
+const ACTIONS = {
+  go: el => go(el.dataset.page),
+  toggleSidebar: () => { $('#sidebar').classList.toggle('open'); $('#backdrop').classList.toggle('show'); },
+  openCheckin: el => openCheckin(el.dataset.mood ? +el.dataset.mood : null),
+  ckMood: el => { CHECKIN.mood = +el.dataset.v; drawCheckin(); },
+  saveCheckin: () => saveCheckin(),
+  closeModal: () => closeModal(),
+  chatSend: () => chatSend(),
+  breathe: () => { if (currentPage !== 'chat') openBreathe(); else openBreathe(); },
+  closeBreathe: () => closeBreathe(),
+  sleepplan: () => { pushMsg('bot', SLEEP_PLAN, [['focus','Open Focus Mode']]); save(); go('chat'); toast('Wind-down plan delivered in chat 💜','info'); },
+  openPricing: () => openPricing(),
+  planCycle: el => { PLAN_CYCLE = el.dataset.c; openPricing(); },
+  upgrade: () => upgrade(),
+  downgrade: () => downgrade(),
+  focusMode: el => focusSetMode(el.dataset.mode),
+  focusToggle: () => focusToggle(),
+  focusReset: () => focusReset(),
+  setSound: el => playSound(el.dataset.sound),
+  openGame: el => { if (GAME) { if (GAME.cleanup) GAME.cleanup(); GAME = null; closeModal(); } const g = el.dataset.game; if (g==='memory') openMemory(); else if (g==='focusG') openFocusGame(); else if (g==='logic') openLogic(); else openSpeed(); },
+  closeGame: () => closeGame(),
+  openBooking: el => openBooking(el.dataset.doc),
+  confirmBooking: () => confirmBooking(),
+  cancelBooking: el => cancelBooking(el.dataset.ref),
+  waitlist: el => { const d = DOCS.find(x=>x.id===el.dataset.doc); toast('Added to waitlist for '+d.name+' — you\u2019ll be notified when a slot opens.', 'info'); },
+  saveProfile: () => saveProfile(),
+  setPersona: el => { S.settings.personality = el.dataset.p; save(); renderSettings(); toast('AI personality set to '+TONES[el.dataset.p].name+' '+TONES[el.dataset.p].emoji, 'success'); },
+  resetData: () => resetData()
+};
+document.addEventListener('click', e => {
+  // close modal when clicking the overlay itself
+  if (e.target.dataset && e.target.dataset.overlay){ closeModal(); return; }
+  if (e.target.dataset && e.target.dataset.breathe){ closeBreathe(); return; }
+  // game tiles & booking chips (no data-action attribute needed)
+  const tile = e.target.closest('[data-mm],[data-lc],[data-sp],[data-bk-date],[data-bk-time],[data-bk-mode],#ftTarget,#ftArena');
+  if (tile){
+    if (tile.dataset.mm !== undefined){ mmClick(tile); return; }
+    if (tile.dataset.lc !== undefined){ lcAnswer(+tile.dataset.lc); return; }
+    if (tile.dataset.sp !== undefined){ spHit(tile.dataset.sp==='1', tile); return; }
+    if (tile.dataset.bkDate){ BOOKING.date = tile.dataset.bkDate; $$('#bk-dates .chip').forEach(c => c.classList.toggle('on', c.dataset.bkDate === tile.dataset.bkDate)); return; }
+    if (tile.dataset.bkTime){ BOOKING.time = tile.dataset.bkTime; $$('#bk-times .chip').forEach(c => c.classList.toggle('on', c.dataset.bkTime === tile.dataset.bkTime)); return; }
+    if (tile.dataset.bkMode){ BOOKING.mode = tile.dataset.bkMode; $$('#bk-modes button').forEach(b => b.classList.toggle('on', b.dataset.bkMode === tile.dataset.bkMode)); return; }
+    if (tile.id === 'ftTarget'){ if (GAME && GAME.type==='focusG' && GAME.running){ GAME.hits++; const s = $('#ftScore'); if (s) s.textContent = 'Hits: '+GAME.hits+' · Misses: '+GAME.misses; } return; }
+    if (tile.id === 'ftArena'){ if (GAME && GAME.type==='focusG' && GAME.running){ GAME.misses++; const s = $('#ftScore'); if (s) s.textContent = 'Hits: '+GAME.hits+' · Misses: '+GAME.misses; } return; }
+  }
+  const el = e.target.closest('[data-action]');
+  if (!el) return;
+  const fn = ACTIONS[el.dataset.action];
+  if (fn) fn(el, e);
+});
+document.addEventListener('input', e => {
+  const k = e.target.dataset.input;
+  if (!k) return;
+  if (k === 'ckEnergy'){ CHECKIN.energy = +e.target.value; const v = $('#ck-energy-v'); if (v) v.textContent = e.target.value+'/5'; }
+  if (k === 'ckStress'){ CHECKIN.stress = +e.target.value; const v = $('#ck-stress-v'); if (v) v.textContent = e.target.value+'/5'; }
+  if (k === 'volume'){ if (SOUND.master) SOUND.master.gain.value = e.target.value/100; }
+  if (k === 'ndToggle'){ S.settings[e.target.dataset.key] = e.target.checked; applyA11y(); }
+  if (k === 'setLanguage'){ S.settings.language = e.target.value; save(); buildSidebar(); refreshHUD(); go(currentPage); toast('Language updated 🌏','success'); }
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape'){
+    if (BREATHE) closeBreathe();
+    else if (GAME) closeGame();
+    else closeModal();
+  }
+});
+window.addEventListener('resize', () => { const cv = $('#confettiCanvas'); cv.width = innerWidth; cv.height = innerHeight; });
+
+function init(){
+  buildSidebar();
+  applyA11y();
+  refreshHUD();
+  go('dashboard');
+}
+init();
+</script>
+</body>
+</html>
