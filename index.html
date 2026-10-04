@@ -439,11 +439,21 @@ html[data-theme="light"] .plan-card.pro{ background:radial-gradient(400px 200px 
 
 /* ---------- Accessibility variants ---------- */
 body.reduce-motion *, body.reduce-motion *::before, body.reduce-motion *::after{ animation:none!important; transition:none!important; }
-body.hc{ --text:#ffffff; --muted:#d6d4ea; --faint:#b4b2cc; --border:rgba(255,255,255,.4); --border2:rgba(255,255,255,.55); --card:#050508; --card2:#0b0b12; --bg:#000; }
-body.hc .card, body.hc .hero{ background:#05050a; }
+/* High Contrast — adapts to the current theme (never flips your theme) */
+body.hc{ --text:#ffffff; --muted:#e6e4f4; --faint:#c6c4de; --border:rgba(255,255,255,.5); --border2:rgba(255,255,255,.72);
+  --card:#000000; --card2:#000000; --bg:#000; --bg2:#000000;
+  --good:#6ee7b7; --warn:#fcd34d; --bad:#fca5a5; --info:#7dd3fc; background:#000; }
+body.hc .card, body.hc .hero{ background:#000; }
+html[data-theme="light"] body.hc{ --text:#000000; --muted:#171529; --faint:#33304d; --border:rgba(0,0,0,.55); --border2:rgba(0,0,0,.8);
+  --card:#ffffff; --card2:#ffffff; --bg:#ffffff; --bg2:#ffffff;
+  --good:#065f46; --warn:#92400e; --bad:#991b1b; --info:#075985; background:#ffffff; }
+html[data-theme="light"] body.hc .card, html[data-theme="light"] body.hc .hero{ background:#ffffff; }
+html[data-theme="light"] body.hc .toast{ background:#ffffff; }
+html[data-theme="light"] body.hc .chat-input, html[data-theme="light"] body.hc textarea, html[data-theme="light"] body.hc .txt{ background:#ffffff; }
+html[data-theme="light"] body.hc .toggle-row, html[data-theme="light"] body.hc .insight, html[data-theme="light"] body.hc .alert-item, html[data-theme="light"] body.hc .persona, html[data-theme="light"] body.hc .lc-seq, html[data-theme="light"] body.hc .ft-arena, html[data-theme="light"] body.hc .mm-tile, html[data-theme="light"] body.hc .lc-opt{ background:#ffffff; }
 body.cb{ --accent:#4f8cff; --accent2:#f59e0b; --accent-soft:rgba(79,140,255,.16); --good:#4f8cff; --bad:#f59e0b; --warn:#f59e0b;
   --grad:linear-gradient(135deg,#4f8cff,#2f6fe0); }
-body.sr focus-visible{ outline:3px solid var(--warn); }
+body.sr :focus-visible{ outline:3px solid var(--warn); }
 
 /* ---------- Responsive ---------- */
 @media (max-width:1020px){
@@ -739,7 +749,9 @@ function announce(msg){ const r = $('#toastRoot'); r.setAttribute('aria-live','p
 
 /* ---------------- Theme (dark / light) ---------------- */
 const isLight = () => document.documentElement.dataset.theme === 'light';
-const TRACK = () => isLight() ? 'rgba(34,31,56,.13)' : 'rgba(255,255,255,.08)';
+const isHC = () => document.body.classList.contains('hc');
+const TRACK = () => isHC() ? (isLight() ? 'rgba(0,0,0,.42)' : 'rgba(255,255,255,.5)') : (isLight() ? 'rgba(34,31,56,.13)' : 'rgba(255,255,255,.08)');
+const chartInk = () => isHC() ? (isLight() ? '#000000' : '#ffffff') : (isLight() ? '#5e5b80' : '#8d8aad');
 function applyTheme(){
   document.documentElement.dataset.theme = S.settings.theme || 'dark';
   const b = $('#themeBtn');
@@ -751,10 +763,12 @@ function applyTheme(){
 }
 function toggleTheme(){
   S.settings.theme = isLight() ? 'dark' : 'light';
-  save(); applyTheme();
-  const renderers = { dashboard:renderDashboard, chat:renderChat, focus:renderFocus, cognitive:renderCognitive, therapy:renderTherapy, analytics:renderAnalytics, preventive:renderPreventive, neurodiverse:renderNeurodiverse, settings:renderSettings };
-  renderers[currentPage]();
+  save(); applyTheme(); rerenderCurrent();
   toast(isLight() ? 'Light mode on ☀️' : 'Dark mode on 🌙', 'info', 1600);
+}
+function rerenderCurrent(){
+  const renderers = { dashboard:renderDashboard, chat:renderChat, focus:renderFocus, cognitive:renderCognitive, therapy:renderTherapy, analytics:renderAnalytics, preventive:renderPreventive, neurodiverse:renderNeurodiverse, settings:renderSettings };
+  if (renderers[currentPage]) renderers[currentPage]();
 }
 
 /* ---------------- Confetti ---------------- */
@@ -934,8 +948,8 @@ function svgLine(vals, labels, min, max, color='#a78bfa'){
   let path = '', area = '';
   vals.forEach((v,i) => { path += (i?'L':'M') + X(i).toFixed(1) + ' ' + Y(v).toFixed(1) + ' '; });
   area = path + 'L' + X(vals.length-1).toFixed(1) + ' ' + (pt+ih) + ' L' + X(0).toFixed(1) + ' ' + (pt+ih) + ' Z';
-  const dots = vals.map((v,i) => '<circle cx="'+X(i).toFixed(1)+'" cy="'+Y(v).toFixed(1)+'" r="4" fill="'+color+'" stroke="#12121e" stroke-width="2"><title>'+labels[i]+': '+v+'</title></circle>').join('');
-  const xlabels = labels.map((l,i) => '<text x="'+X(i).toFixed(1)+'" y="'+(h-8)+'" font-size="9.5" fill="#6d6a8a" text-anchor="middle">'+l+'</text>').join('');
+  const dots = vals.map((v,i) => '<circle cx="'+X(i).toFixed(1)+'" cy="'+Y(v).toFixed(1)+'" r="4" fill="'+color+'" stroke="'+(isLight()?'#ffffff':'#12121e')+'" stroke-width="2"><title>'+labels[i]+': '+v+'</title></circle>').join('');
+  const xlabels = labels.map((l,i) => '<text x="'+X(i).toFixed(1)+'" y="'+(h-8)+'" font-size="9.5" fill="'+chartInk()+'" text-anchor="middle">'+l+'</text>').join('');
   return '<svg viewBox="0 0 '+w+' '+h+'" role="img">'+
     '<defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="'+color+'" stop-opacity=".3"/><stop offset="1" stop-color="'+color+'" stop-opacity="0"/></linearGradient></defs>'+
     '<path d="'+area+'" fill="url(#ag)"/>'+
@@ -953,8 +967,8 @@ function svgBars(vals, labels, opts){
     const x = pl + (i+0.5)*iw/vals.length - bw/2, bh = clamp(v/max,0,1)*ih, y = pt+ih-bh;
     return '<rect x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+bh.toFixed(1)+'" rx="5" fill="'+color+'" opacity="'+(v?'.92':'.25')+'"><title>'+labels[i]+': '+v+unit+'</title></rect>';
   }).join('');
-  const xlabels = labels.map((l,i) => '<text x="'+(pl+(i+0.5)*iw/vals.length).toFixed(1)+'" y="'+(h-8)+'" font-size="9.5" fill="#6d6a8a" text-anchor="middle">'+l+'</text>').join('');
-  const goalLine = goal ? '<line x1="'+pl+'" y1="'+(pt+ih-ih*goal/max).toFixed(1)+'" x2="'+(w-pr)+'" y2="'+(pt+ih-ih*goal/max).toFixed(1)+'" stroke="#34d399" stroke-width="1.6" stroke-dasharray="5 5"/><text x="'+(w-pr)+'" y="'+(pt+ih-ih*goal/max-4).toFixed(1)+'" font-size="9" fill="#34d399" text-anchor="end">goal '+goal+unit+'</text>' : '';
+  const xlabels = labels.map((l,i) => '<text x="'+(pl+(i+0.5)*iw/vals.length).toFixed(1)+'" y="'+(h-8)+'" font-size="9.5" fill="'+chartInk()+'" text-anchor="middle">'+l+'</text>').join('');
+  const goalLine = goal ? '<line x1="'+pl+'" y1="'+(pt+ih-ih*goal/max).toFixed(1)+'" x2="'+(w-pr)+'" y2="'+(pt+ih-ih*goal/max).toFixed(1)+'" stroke="'+(isLight()?'#059669':'#34d399')+'" stroke-width="1.6" stroke-dasharray="5 5"/><text x="'+(w-pr)+'" y="'+(pt+ih-ih*goal/max-4).toFixed(1)+'" font-size="9" fill="'+(isLight()?'#059669':'#34d399')+'" text-anchor="end">goal '+goal+unit+'</text>' : '';
   return '<svg viewBox="0 0 '+w+' '+h+'" role="img">'+bars+goalLine+xlabels+'</svg>';
 }
 function renderAnalytics(){
@@ -2142,7 +2156,11 @@ document.addEventListener('input', e => {
   if (k === 'ckEnergy'){ CHECKIN.energy = +e.target.value; const v = $('#ck-energy-v'); if (v) v.textContent = e.target.value+'/5'; }
   if (k === 'ckStress'){ CHECKIN.stress = +e.target.value; const v = $('#ck-stress-v'); if (v) v.textContent = e.target.value+'/5'; }
   if (k === 'volume'){ if (SOUND.master) SOUND.master.gain.value = e.target.value/100; }
-  if (k === 'ndToggle'){ S.settings[e.target.dataset.key] = e.target.checked; applyA11y(); }
+  if (k === 'ndToggle'){
+    S.settings[e.target.dataset.key] = e.target.checked; applyA11y(); rerenderCurrent();
+    const meta = ND.find(n => n.key === e.target.dataset.key);
+    if (meta) toast(meta.title + (e.target.checked ? ' on' : ' off'), 'info', 1500);
+  }
   if (k === 'setLanguage'){ S.settings.language = e.target.value; save(); buildSidebar(); refreshHUD(); go(currentPage); toast('Language updated 🌏','success'); }
 });
 document.addEventListener('keydown', e => {

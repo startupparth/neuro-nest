@@ -17,7 +17,7 @@ Neuro Nest is a complete mental-wellness app in a **single HTML file** — no bu
 | 🩺 **Therapy Hub** | Book sessions with verified psychologists & psychiatrists — pick date, time slot and mode (video/audio/chat). Cancel or join waitlists |
 | 📊 **Analytics** | Mood, sleep & focus charts, productivity heatmap, emotion mix and weekly AI insights — computed from your own check-ins |
 | 🛡️ **Preventive AI** | Burnout risk, stress level, sleep debt and recovery score with early-warning health alerts |
-| ♿ **Neurodiverse Mode** | Reduced motion, high contrast, color-blind palette, large text and screen-reader support — all genuinely functional |
+| ♿ **Neurodiverse Mode** | Reduced motion, high contrast (works in both dark & light themes), color-blind palette, large text and screen-reader support — all genuinely functional |
 | 🌗 **Dark / Light Mode** | One-tap theme toggle in the top bar — your choice is remembered |
 | ⚙️ **Settings & Pricing** | Profile, Hindi/Hinglish/English interface, 4 AI personalities, Free vs Pro (₹299/month) plan with a 10-message/day free limit |
 
