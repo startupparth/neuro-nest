@@ -11,7 +11,7 @@ Neuro Nest is a complete mental-wellness app in a **single HTML file** — no bu
 | Module | What it does |
 |---|---|
 | 🏠 **Dashboard** | Vitality Score, day streak, XP, daily mood check-in, personalized AI suggestions |
-| 💬 **AI Companion** | Emotion-aware chat that detects sadness, anxiety, anger, burnout, loneliness, sleep & focus issues — then suggests what to do (breathing, focus sprint, check-in, or booking a professional). Crisis messages instantly surface Indian helplines (Tele-MANAS 14416, AASRA, iCall) |
+| 💬 **AI Companion** | Emotion-aware chat **powered by Google Gemini** (gemini-3.5-flash, context-aware of your mood/sleep data) with a built-in offline rule-based fallback. Detects sadness, anxiety, anger, burnout, loneliness, sleep & focus issues — then suggests what to do. Crisis messages instantly surface Indian helplines (Tele-MANAS 14416, AASRA, iCall) — always handled locally, never sent to the cloud |
 | ⏱️ **Focus Mode** | Real Pomodoro timer (Deep Focus 25 min / Quick Sprint 10 min) with **live-generated ambient soundscapes** — rain, ocean, lo-fi chords, forest birds (WebAudio, no audio files) |
 | 🧩 **Cognitive Lab** | 6 playable games: Memory Matrix, Focus Trainer, Logic Chains, **Mindful Colors (Stroop)**, **Gratitude Garden**, Speed Processing — with levels, XP and Brain Score |
 | 🩺 **Therapy Hub** | Book sessions with verified psychologists & psychiatrists — pick date, time slot and mode (video/audio/chat). Cancel or join waitlists |
@@ -26,6 +26,17 @@ Neuro Nest is a complete mental-wellness app in a **single HTML file** — no bu
 **Built in:** Memory Matrix (visual-spatial recall) · Focus Trainer (attention tracking) · Logic Chains (sequential reasoning) · Mindful Colors (Stroop test — trains attention control & interference resistance) · Gratitude Garden (plant a flower for each good thing — a daily gratitude practice that grows over time) · Speed Processing (rapid pattern recognition)
 
 **Ideas for v2:** Breath Sync (tap in rhythm with your breathing) · Body Scan walkthrough · Sound Garden (identify & layer ambient sounds) · Mirror Tracing · Walking Meditation timer · Guided Journaling prompts
+
+## ✦ Cloud AI (Gemini)
+
+The AI Companion uses the **Google Gemini API** for smarter, context-aware replies:
+- Key is set in the `GEMINI_API_KEY` constant near the top of the `<script>` in `index.html`
+- Model auto-fallback chain: `gemini-3.5-flash` → `gemini-flash-latest` → `gemini-3.1-flash-lite`
+- If the API is unreachable (offline, quota, error), the app **automatically falls back** to the built-in rule-based engine — the chat never breaks
+- Crisis messages are always handled locally with helplines — no cloud dependency for safety
+- Toggle it anytime in **Settings → AI Engine** (includes a connection test)
+
+> ⚠️ **Security note:** an API key shipped in client-side code is visible to anyone who opens the file or repo. For anything beyond demos: restrict the key (HTTP referrer limits in Google Cloud Console), set billing caps, and rotate it if abused. Get your own free key at [aistudio.google.com/apikey](https://aistudio.google.com/apikey).
 
 ## 🚀 Quick start
 

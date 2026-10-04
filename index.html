@@ -681,7 +681,7 @@ function defaultState(){
 let S = storage.get('neuronest_v1', null);
 if (!S || !S.seeded) { S = defaultState(); storage.set('neuronest_v1', S); }
 /* migrate older saved states to v1.1 (theme + new games) */
-S.settings = Object.assign({ theme:'dark' }, S.settings);
+S.settings = Object.assign({ theme:'dark', cloudAI:true }, S.settings);
 S.gameLevels = Object.assign({ memory:1, focus:1, logic:1, speed:1, stroop:1 }, S.gameLevels);
 S.gameXP = Object.assign({ memory:0, focus:0, logic:0, speed:0, stroop:0 }, S.gameXP);
 S.garden = Object.assign({ count:0, plot:[] }, S.garden);
@@ -1111,6 +1111,68 @@ const HELPLINES = 'If you\u2019re thinking about harming yourself, please reach 
   '<b>Emergency</b> — 112';
 const SLEEP_PLAN = 'Tonight\u2019s wind-down plan: ☕ no caffeine after 4 PM · 📵 screens off 45 min before bed (or night-mode + low brightness) · 🌡️ cool, dark room · 📝 brain-dump tomorrow\u2019s worries on paper · 🫁 4-7-8 breathing in bed · ⏰ same wake time as yesterday — consistency matters more than duration.';
 
+/* ---- Cloud AI (Google Gemini) with offline fallback ---- */
+const GEMINI_API_KEY = 'AIzaSyAZiO-CvYwrFsTMY--7PnwZO_QjE9SvCLU';
+const GEMINI_MODELS = ['gemini-3.5-flash', 'gemini-flash-latest', 'gemini-3.1-flash-lite'];
+let GEMINI_MODEL_OK = null;
+async function geminiCall(body){
+  const models = GEMINI_MODEL_OK ? [GEMINI_MODEL_OK] : GEMINI_MODELS;
+  for (const model of models){
+    try {
+      const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+model+':generateContent?key='+GEMINI_API_KEY,
+        { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(body) });
+      if (res.status === 404 || res.status === 429 || res.status === 503) continue; // model unavailable or overloaded — try next
+      const data = await res.json().catch(() => null);
+      const cand = data && data.candidates && data.candidates[0];
+      const parts = cand && cand.content && cand.content.parts ? cand.content.parts.filter(p => p.text && !p.thought) : [];
+      const txt = parts.length ? parts.map(p => p.text).join('').trim() : null;
+      if (txt){ GEMINI_MODEL_OK = model; return txt; }
+      return null;
+    } catch(e){ return null; } // no network / blocked — caller falls back to built-in engine
+  }
+  return null;
+}
+function systemPrompt(){
+  const M = metrics();
+  const toneMap = { compassionate:'warm, gentle and validating', coach:'energetic and action-oriented, like a supportive coach', analytical:'calm, structured and data-driven', playful:'light, fun and encouraging' };
+  const tone = toneMap[S.settings.personality] || toneMap.compassionate;
+  const tl = todayLog();
+  return 'You are the AI companion inside "Neuro Nest", a mental-wellness mind operating system app. '+
+    'User: '+S.profile.name+' ('+(S.profile.occupation||'—')+'). Their goal: '+S.profile.goal+'. '+
+    'Recent 7-day data: average mood '+M.moodAvg.toFixed(1)+'/5, average sleep '+M.sleepAvg.toFixed(1)+'h, stress '+M.stressPct+'%, burnout risk '+M.burnout+'%, recovery '+M.recovery+'%. '+
+    (tl ? 'Today they checked in: mood '+tl.mood+'/5, stress '+tl.stress+'/5, '+tl.sleep+'h sleep.' : 'They have not done today\u2019s check-in yet.')+' '+
+    'Your tone: '+tone+'. '+
+    'Guidelines: keep replies short (2-5 sentences), warm and practical; reference their data when relevant. '+
+    'You can suggest these in-app actions: Focus Mode (pomodoro with ambient soundscapes), 4-7-8 breathing exercise, daily mood check-in, Cognitive Lab games (Memory Matrix, Focus Trainer, Logic Chains, Mindful Colors, Gratitude Garden), Therapy Hub (book verified psychologists & psychiatrists), Analytics, and Preventive AI burnout alerts. '+
+    'Reply in the same language the user writes in (English, Hindi or Hinglish). '+
+    'Never diagnose or prescribe medication. For clinical concerns, encourage booking a session in the Therapy Hub. '+
+    'If the user mentions self-harm or suicide, urge them to contact Tele-MANAS 14416 (Govt of India, 24x7, free), AASRA +91 9820466726, iCall 9152987821 or emergency 112, and to reach out to someone they trust.';
+}
+async function geminiChat(){
+  const hist = S.chat.filter(m => m.role === 'user' || m.role === 'bot').slice(-16).map(m => ({
+    role: m.role === 'bot' ? 'model' : 'user',
+    parts: [{ text: String(m.text).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 800) }]
+  }));
+  if (!hist.length || hist[0].role !== 'user') hist.unshift({ role:'user', parts:[{ text:'Hello' }] });
+  return geminiCall({
+    systemInstruction: { parts: [{ text: systemPrompt() }] },
+    contents: hist,
+    generationConfig: { temperature: 0.75, topP: 0.95 }
+  });
+}
+function mdLite(s){
+  let h = esc(String(s));
+  h = h.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
+  h = h.replace(/\*([^*\n]+)\*/g, '<i>$1</i>');
+  h = h.replace(/\n/g, '<br>');
+  return h;
+}
+async function testAIConnection(){
+  toast('Testing Gemini connection…', 'info', 1800);
+  const ok = await geminiCall({ contents: [{ role:'user', parts:[{ text:'Reply with exactly: OK' }] }] });
+  toast(ok ? '✦ Cloud AI connected! Replies will use Gemini.' : 'Could not reach Gemini — built-in replies will be used (check network or key).', ok ? 'success' : 'warn', 4500);
+}
+
 function detectCrisis(text){ const t = text.toLowerCase(); return CRISIS_KW.some(k => t.includes(k)); }
 function detectEmotion(text){
   const t = ' ' + text.toLowerCase() + ' ';
@@ -1136,7 +1198,7 @@ function botRespond(userText){
   const usageLimit = S.plan === 'pro' ? Infinity : 10;
   if (S.chatUsage.n > usageLimit){
     return { text:'You\u2019ve used all <b>'+usageLimit+' free messages</b> for today (they reset tomorrow midnight). Upgrade to Pro for unlimited conversations with your AI Mind Coach.',
-      sug:[['pricing','Upgrade to Pro'],['breathe','Free: breathing exercise']] };
+      sug:[['pricing','Upgrade to Pro'],['breathe','Free: breathing exercise']], limit:true };
   }
   const emo = detectEmotion(userText);
   const intent = emo ? null : detectIntent(userText);
@@ -1159,8 +1221,8 @@ function botRespond(userText){
   }
   return { text, sug };
 }
-function pushMsg(role, text, sug){
-  S.chat.push({ role, text, sug: sug||[], time: nowTime() });
+function pushMsg(role, text, sug, meta){
+  S.chat.push({ role, text, sug: sug||[], time: nowTime(), meta: meta||null });
   save();
 }
 function welcomeMsg(){
@@ -1180,9 +1242,9 @@ function renderChat(){
   const msgs = S.chat.map(m =>
     '<div class="msg '+m.role+'">'+
       '<div class="m-ava">'+(m.role==='bot' ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>' : (S.profile.name[0]||'U'))+'</div>'+
-      '<div><div class="m-bubble">'+m.text+(m.sug && m.sug.length ? '<div class="m-sug">'+m.sug.map(sugButton).join('')+'</div>' : '')+'</div><div class="m-time">'+m.time+'</div></div>'+
+      '<div><div class="m-bubble">'+m.text+(m.sug && m.sug.length ? '<div class="m-sug">'+m.sug.map(sugButton).join('')+'</div>' : '')+'</div><div class="m-time">'+m.time+(m.meta ? ' · '+m.meta : '')+'</div></div>'+
     '</div>').join('');
-  const remaining = S.plan==='pro' ? 'PRO · unlimited' : (10 - Math.min(S.chatUsage.n,10)) + '/10 free today';
+  const remaining = (S.settings.cloudAI !== false ? '✦ AI · ' : '') + (S.plan==='pro' ? 'PRO · unlimited' : (10 - Math.min(S.chatUsage.n,10)) + '/10 free today');
   el.innerHTML =
     '<div class="chat-wrap">'+
       '<div class="chat-scroll" id="chatScroll">'+msgs+'</div>'+
@@ -1196,7 +1258,7 @@ function renderChat(){
   const input = $('#chatInput');
   input.addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); chatSend(); } });
 }
-function chatSend(){
+async function chatSend(){
   const input = $('#chatInput');
   const text = input.value.trim();
   if (!text) return;
@@ -1212,11 +1274,19 @@ function chatSend(){
   const typ = document.createElement('div');
   typ.className = 'msg bot'; typ.innerHTML = '<div class="m-ava">✦</div><div class="m-bubble typing"><i></i><i></i><i></i></div>';
   sc.appendChild(typ); sc.scrollTop = sc.scrollHeight;
+  const started = Date.now();
+  const local = botRespond(text); // emotion logging, usage limits & rule-based reply
+  let finalText = local.text, meta = null;
+  if (!isCrisis && !local.limit && S.settings.cloudAI !== false){
+    const ai = await geminiChat();
+    if (ai){ finalText = mdLite(ai); meta = '✦ AI'; }
+  }
+  const wait = Math.max(0, 650 - (Date.now() - started));
   setTimeout(() => {
-    const reply = botRespond(text);
-    pushMsg('bot', reply.text, reply.sug);
+    typ.remove();
+    pushMsg('bot', finalText, local.sug, meta);
     save(); renderChat();
-  }, 700 + Math.random()*700);
+  }, wait);
 }
 
 /* ================= BREATHING ================= */
@@ -2023,6 +2093,13 @@ function renderSettings(){
             '<option value="hinglish" '+(S.settings.language==='hinglish'?'selected':'')+'>Hinglish</option>'+
           '</select></div>'+
           '<p class="tiny muted mt">Interface language (AI chat currently speaks English).</p></div>'+
+        '<div class="card"><div class="card-title">'+I.bot+' AI Engine</div>'+
+          '<div class="toggle-row" style="background:transparent;border:none;padding:10px 0 2px">'+
+          '<div class="t-ico">☁️</div><div><div class="t-title">Cloud AI (Gemini)</div><div class="t-desc">Context-aware replies powered by Google Gemini. Falls back to built-in replies when offline.</div></div>'+
+          '<label class="switch"><input type="checkbox" data-input="cloudAIToggle" '+(S.settings.cloudAI !== false ? 'checked' : '')+' aria-label="Cloud AI"><span class="sl"></span></label></div>'+
+          '<div class="spread mt"><span class="tiny muted">Key configured · model auto-fallback · crisis replies always built-in</span>'+
+          '<button class="btn btn-soft btn-sm" data-action="testAI">Test connection</button></div>'+
+        '</div>'+
         '<div class="card"><div class="card-title">'+I.bot+' AI Personality</div>'+
           '<div class="persona-grid mt">'+
             PERSONAS.map(x => '<button class="persona'+(S.settings.personality===x.id?' on':'')+'" data-action="setPersona" data-p="'+x.id+'"><div class="p-emoji">'+x.emoji+'</div><div class="p-name">'+x.name+'</div><div class="p-desc">'+x.desc+'</div></button>').join('')+
@@ -2120,6 +2197,7 @@ const ACTIONS = {
   closeGame: () => closeGame(),
   gardenPlant: () => gardenPlant(),
   toggleTheme: () => toggleTheme(),
+  testAI: () => testAIConnection(),
   openBooking: el => openBooking(el.dataset.doc),
   confirmBooking: () => confirmBooking(),
   cancelBooking: el => cancelBooking(el.dataset.ref),
@@ -2162,6 +2240,7 @@ document.addEventListener('input', e => {
     if (meta) toast(meta.title + (e.target.checked ? ' on' : ' off'), 'info', 1500);
   }
   if (k === 'setLanguage'){ S.settings.language = e.target.value; save(); buildSidebar(); refreshHUD(); go(currentPage); toast('Language updated 🌏','success'); }
+  if (k === 'cloudAIToggle'){ S.settings.cloudAI = e.target.checked; save(); toast(e.target.checked ? '✦ Cloud AI on — replies use Gemini' : 'Cloud AI off — using built-in replies', 'info', 2200); }
 });
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape'){
