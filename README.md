@@ -13,12 +13,19 @@ Neuro Nest is a complete mental-wellness app in a **single HTML file** — no bu
 | 🏠 **Dashboard** | Vitality Score, day streak, XP, daily mood check-in, personalized AI suggestions |
 | 💬 **AI Companion** | Emotion-aware chat that detects sadness, anxiety, anger, burnout, loneliness, sleep & focus issues — then suggests what to do (breathing, focus sprint, check-in, or booking a professional). Crisis messages instantly surface Indian helplines (Tele-MANAS 14416, AASRA, iCall) |
 | ⏱️ **Focus Mode** | Real Pomodoro timer (Deep Focus 25 min / Quick Sprint 10 min) with **live-generated ambient soundscapes** — rain, ocean, lo-fi chords, forest birds (WebAudio, no audio files) |
-| 🧩 **Cognitive Lab** | 4 playable brain games: Memory Matrix, Focus Trainer, Logic Chains, Speed Processing — with levels, XP and Brain Score |
+| 🧩 **Cognitive Lab** | 6 playable games: Memory Matrix, Focus Trainer, Logic Chains, **Mindful Colors (Stroop)**, **Gratitude Garden**, Speed Processing — with levels, XP and Brain Score |
 | 🩺 **Therapy Hub** | Book sessions with verified psychologists & psychiatrists — pick date, time slot and mode (video/audio/chat). Cancel or join waitlists |
 | 📊 **Analytics** | Mood, sleep & focus charts, productivity heatmap, emotion mix and weekly AI insights — computed from your own check-ins |
 | 🛡️ **Preventive AI** | Burnout risk, stress level, sleep debt and recovery score with early-warning health alerts |
 | ♿ **Neurodiverse Mode** | Reduced motion, high contrast, color-blind palette, large text and screen-reader support — all genuinely functional |
+| 🌗 **Dark / Light Mode** | One-tap theme toggle in the top bar — your choice is remembered |
 | ⚙️ **Settings & Pricing** | Profile, Hindi/Hinglish/English interface, 4 AI personalities, Free vs Pro (₹299/month) plan with a 10-message/day free limit |
+
+## 🧘 Mindful games
+
+**Built in:** Memory Matrix (visual-spatial recall) · Focus Trainer (attention tracking) · Logic Chains (sequential reasoning) · Mindful Colors (Stroop test — trains attention control & interference resistance) · Gratitude Garden (plant a flower for each good thing — a daily gratitude practice that grows over time) · Speed Processing (rapid pattern recognition)
+
+**Ideas for v2:** Breath Sync (tap in rhythm with your breathing) · Body Scan walkthrough · Sound Garden (identify & layer ambient sounds) · Mirror Tracing · Walking Meditation timer · Guided Journaling prompts
 
 ## 🚀 Quick start
 
