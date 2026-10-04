@@ -743,7 +743,11 @@ const TRACK = () => isLight() ? 'rgba(34,31,56,.13)' : 'rgba(255,255,255,.08)';
 function applyTheme(){
   document.documentElement.dataset.theme = S.settings.theme || 'dark';
   const b = $('#themeBtn');
-  if (b) b.innerHTML = isLight() ? I.moon + ' <span>Dark</span>' : I.sun + ' <span>Light</span>';
+  if (b){
+    b.innerHTML = isLight() ? I.sun + ' <span>Light</span>' : I.moon + ' <span>Dark</span>';
+    b.title = isLight() ? 'Currently Light — click to switch to Dark' : 'Currently Dark — click to switch to Light';
+    b.setAttribute('aria-label', b.title);
+  }
 }
 function toggleTheme(){
   S.settings.theme = isLight() ? 'dark' : 'light';
